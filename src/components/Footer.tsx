@@ -1,113 +1,114 @@
-
-import { Heart } from "lucide-react";
+import { Heart, ArrowRight, Github, Linkedin, Twitter } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
+import { Link } from "react-router-dom";
 
 export function Footer() {
   return (
-    <footer className="bg-slate-950 text-slate-50">
-      <div className="container px-4 py-16 md:px-6 lg:py-20">
-        <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-4">
+    <footer className="bg-gradient-to-br from-slate-900 to-slate-950 text-slate-50 pt-12 pb-6">
+      <div className="container px-4 md:px-6">
+        {/* Animated wave separator */}
+        <div className="relative h-12 mb-8 overflow-hidden">
+          <div className="absolute w-full">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" className="text-blue-600 opacity-10">
+              <path fill="currentColor" fillOpacity="1" d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,133.3C672,139,768,181,864,181.3C960,181,1056,139,1152,122.7C1248,107,1344,117,1392,122.7L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
+            </svg>
+          </div>
+        </div>
+        
+        <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-3">
+          {/* Brand Column */}
           <div className="space-y-4">
-            <div className="flex items-center gap-2 font-bold text-2xl">
-              <Heart className="h-6 w-6 fill-primary text-white" />
-              <span>CardiaLink</span>
-            </div>
+            <Link to="/" className="flex items-center gap-2 font-bold text-2xl group transition-all">
+              <div className="relative transition-all">
+                <Heart className="h-6 w-6 fill-blue-500 text-white group-hover:scale-110 transition-transform" />
+                <span className="absolute -top-1 -right-1 w-2 h-2 bg-blue-500 rounded-full animate-ping opacity-75"></span>
+              </div>
+              <span className="text-blue-400 text-gradient bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-indigo-400">
+                CardiaLink
+              </span>
+            </Link>
             <p className="text-sm text-slate-400">
-              AI-powered health risk assessment and personalized insurance platform
+              AI-powered health risk assessment and personalized insurance platform. Understand your health risks and get tailored insurance plans.
             </p>
-            <div className="flex space-x-4">
-              <Button size="icon" variant="ghost" className="rounded-full">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
-                  <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
-                </svg>
-                <span className="sr-only">Facebook</span>
-              </Button>
-              <Button size="icon" variant="ghost" className="rounded-full">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
-                  <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"></path>
-                </svg>
-                <span className="sr-only">Twitter</span>
-              </Button>
-              <Button size="icon" variant="ghost" className="rounded-full">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
-                  <rect width="20" height="20" x="2" y="2" rx="5" ry="5"></rect>
-                  <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
-                  <line x1="17.5" x2="17.51" y1="6.5" y2="6.5"></line>
-                </svg>
-                <span className="sr-only">Instagram</span>
-              </Button>
-              <Button size="icon" variant="ghost" className="rounded-full">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
-                  <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path>
-                  <rect width="4" height="12" x="2" y="9"></rect>
-                  <circle cx="4" cy="4" r="2"></circle>
-                </svg>
-                <span className="sr-only">LinkedIn</span>
-              </Button>
+            
+            <div className="pt-4">
+              <h4 className="text-sm font-semibold text-slate-200 mb-3">Connect With Us</h4>
+              <div className="flex space-x-4">
+                <Button size="icon" variant="ghost" className="rounded-full h-8 w-8 bg-slate-800/50 hover:bg-blue-900/50 hover:text-blue-400">
+                  <Github className="h-4 w-4" />
+                  <span className="sr-only">GitHub</span>
+                </Button>
+                <Button size="icon" variant="ghost" className="rounded-full h-8 w-8 bg-slate-800/50 hover:bg-blue-900/50 hover:text-blue-400">
+                  <Twitter className="h-4 w-4" />
+                  <span className="sr-only">Twitter</span>
+                </Button>
+                <Button size="icon" variant="ghost" className="rounded-full h-8 w-8 bg-slate-800/50 hover:bg-blue-900/50 hover:text-blue-400">
+                  <Linkedin className="h-4 w-4" />
+                  <span className="sr-only">LinkedIn</span>
+                </Button>
+              </div>
             </div>
           </div>
+          
+          {/* Quick Links Column */}
           <div className="space-y-4">
-            <h3 className="text-lg font-medium">Services</h3>
+            <h3 className="text-lg font-medium text-blue-300">Quick Links</h3>
             <ul className="space-y-2 text-sm text-slate-400">
               <li>
-                <a href="#" className="hover:text-white transition-colors">Heart Disease Assessment</a>
+                <a href="/" className="hover:text-blue-400 transition-colors flex items-center gap-1">
+                  <ArrowRight className="h-3 w-3" /> Home
+                </a>
               </li>
               <li>
-                <a href="#" className="hover:text-white transition-colors">Diabetes Risk Analysis</a>
+                <a href="#services" className="hover:text-blue-400 transition-colors flex items-center gap-1">
+                  <ArrowRight className="h-3 w-3" /> Services
+                </a>
               </li>
               <li>
-                <a href="#" className="hover:text-white transition-colors">Cancer Risk Evaluation</a>
+                <a href="/about" className="hover:text-blue-400 transition-colors flex items-center gap-1">
+                  <ArrowRight className="h-3 w-3" /> About Us
+                </a>
               </li>
               <li>
-                <a href="#" className="hover:text-white transition-colors">Kidney Health Check</a>
+                <a href="/privacy" className="hover:text-blue-400 transition-colors flex items-center gap-1">
+                  <ArrowRight className="h-3 w-3" /> Privacy Policy
+                </a>
               </li>
               <li>
-                <a href="#" className="hover:text-white transition-colors">Liver Health Assessment</a>
+                <a href="/terms" className="hover:text-blue-400 transition-colors flex items-center gap-1">
+                  <ArrowRight className="h-3 w-3" /> Terms of Service
+                </a>
               </li>
             </ul>
           </div>
+          
+          {/* Newsletter Column */}
           <div className="space-y-4">
-            <h3 className="text-lg font-medium">Company</h3>
-            <ul className="space-y-2 text-sm text-slate-400">
-              <li>
-                <a href="#" className="hover:text-white transition-colors">About Us</a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-white transition-colors">Team</a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-white transition-colors">Careers</a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-white transition-colors">Blog</a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-white transition-colors">Press</a>
-              </li>
-            </ul>
-          </div>
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium">Newsletter</h3>
-            <p className="text-sm text-slate-400">
-              Subscribe to our newsletter for updates on new features and health insights.
-            </p>
-            <div className="flex space-x-2">
-              <Input placeholder="Email" className="bg-slate-900 border-slate-800 text-white" />
-              <Button>Subscribe</Button>
+            <h3 className="text-lg font-medium text-blue-300">Stay Updated</h3>
+            <p className="text-sm text-slate-400">Subscribe to our newsletter for the latest health insights and updates.</p>
+            <div className="flex gap-2">
+              <Input 
+                type="email"
+                placeholder="Enter your email"
+                className="bg-slate-800/50 border-slate-700 placeholder:text-slate-500 focus-visible:ring-blue-400"
+              />
+              <Button size="sm" className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
+                <ArrowRight className="h-4 w-4" />
+              </Button>
             </div>
           </div>
         </div>
+        
         <Separator className="my-8 bg-slate-800" />
-        <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
-          <p className="text-xs text-slate-400">
-            © 2023 CardiaLink. All rights reserved.
-          </p>
-          <div className="flex gap-4 text-xs text-slate-400">
-            <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
-            <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
-            <a href="#" className="hover:text-white transition-colors">Cookie Policy</a>
+        
+        <div className="flex flex-col md:flex-row items-center justify-between text-sm text-slate-500">
+          <p>© {new Date().getFullYear()} CardiaLink. All rights reserved.</p>
+          <div className="flex gap-6 mt-4 md:mt-0">
+            <a href="/privacy" className="hover:text-blue-400 transition-colors">Privacy</a>
+            <a href="/terms" className="hover:text-blue-400 transition-colors">Terms</a>
+            <a href="/cookies" className="hover:text-blue-400 transition-colors">Cookies</a>
           </div>
         </div>
       </div>

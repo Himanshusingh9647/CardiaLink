@@ -1,211 +1,164 @@
-
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Heart, Activity, Scan as ScanIcon, Droplet as DropletIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Heart, Activity, BarChart, Shield, Database, Brain } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useEffect } from "react";
 
 export function ServicesSection() {
+  // Staggered animation entry for service items
+  useEffect(() => {
+    // Stagger the animation of items with the benefit-item class
+    const staggerItems = () => {
+      const items = document.querySelectorAll('.stagger-item:not(.visible)');
+      items.forEach((item, index) => {
+        setTimeout(() => {
+          const position = item.getBoundingClientRect();
+          if (position.top < window.innerHeight - 50) {
+            item.classList.add('visible');
+          }
+        }, index * 100); // 100ms stagger
+      });
+    };
+
+    // Initial check
+    setTimeout(staggerItems, 300);
+    
+    // Add scroll listener
+    window.addEventListener('scroll', staggerItems);
+    
+    return () => {
+      window.removeEventListener('scroll', staggerItems);
+    };
+  }, []);
+
   return (
-    <section className="py-12 md:py-16 bg-muted/50" id="services">
+    <section className="py-16 md:py-24 bg-muted/50" id="services">
       <div className="container px-4 md:px-6">
-        <div className="flex flex-col items-center justify-center space-y-4 text-center mb-8 md:mb-12">
+        <div className="flex flex-col items-center justify-center space-y-4 text-center mb-10 md:mb-16 scroll-reveal">
           <div className="inline-block rounded-lg bg-primary/10 px-3 py-1 text-sm text-primary">
-            Services
+            Our Platform
           </div>
-          <h2 className="text-2xl md:text-3xl lg:text-5xl font-bold tracking-tighter">
-            Our Health Assessment Services
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tighter max-w-4xl">
+            Comprehensive Health Risk Detection
           </h2>
-          <p className="max-w-[900px] text-muted-foreground text-sm md:text-base lg:text-xl/relaxed">
-            Comprehensive health risk assessments across multiple disease categories
+          <p className="max-w-[900px] text-muted-foreground md:text-xl">
+            Advanced AI-powered risk assessment across all major disease categories
           </p>
         </div>
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8">
-          {services.map((service, index) => (
-            <Link 
-              key={service.title} 
-              to={service.href} 
-              className="block transition-all duration-300 hover:-translate-y-2 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-lg"
-            >
-              <Card className={cn(
-                "h-full shadow-sm hover:shadow-lg border-2 border-muted hover:border-primary/20 transition-all duration-300",
-                index === 0 && "sm:col-span-2 lg:col-span-1 lg:row-span-1 bg-gradient-to-br from-primary/5 to-background"
-              )}>
-                <CardHeader className="p-4 md:p-6 space-y-2 md:space-y-4">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-full bg-primary/10">
-                      <service.icon className="h-5 w-5 md:h-6 md:w-6 text-primary" />
-                    </div>
-                    <CardTitle className="text-base md:text-xl font-bold">{service.title}</CardTitle>
-                  </div>
-                  <CardDescription className="text-xs md:text-base">{service.description}</CardDescription>
-                </CardHeader>
-                <CardContent className="p-4 md:p-6 pt-0">
-                  <ul className="space-y-2 md:space-y-3">
-                    {service.features.map((feature) => (
-                      <li key={feature} className="flex items-center gap-2 text-xs md:text-sm">
-                        <div className="h-1.5 w-1.5 rounded-full bg-primary" />
-                        <span>{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-                <CardFooter className="p-4 md:p-6 pt-0 flex justify-end">
-                  <div className="text-xs md:text-sm font-medium text-primary flex items-center gap-1">
-                    View details
-                    <svg 
-                      xmlns="http://www.w3.org/2000/svg" 
-                      width="16" 
-                      height="16" 
-                      viewBox="0 0 24 24" 
-                      fill="none" 
-                      stroke="currentColor" 
-                      strokeWidth="2" 
-                      strokeLinecap="round" 
-                      strokeLinejoin="round" 
-                      className="ml-1"
-                    >
-                      <path d="M5 12h14"></path>
-                      <path d="m12 5 7 7-7 7"></path>
+        <div className="grid md:grid-cols-2 gap-8 lg:gap-12 items-center">
+          <div className="space-y-6 scroll-reveal">
+            <div className="space-y-3">
+              <h3 className="text-2xl font-bold">Integrated Multi-Disease Analysis</h3>
+              <p className="text-muted-foreground">
+                Our platform analyzes your health data across multiple disease models including heart disease, diabetes, and kidney and liver conditions to provide a holistic view of your health risks.
+              </p>
+            </div>
+            
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="flex items-start gap-3 stagger-item scroll-reveal">
+                <div className="shrink-0 p-1.5 rounded-md bg-primary/10">
+                  <Heart className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h4 className="font-medium">Cardiovascular</h4>
+                  <p className="text-sm text-muted-foreground">Comprehensive heart health risk analysis</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-3 stagger-item scroll-reveal">
+                <div className="shrink-0 p-1.5 rounded-md bg-primary/10">
+                  <Activity className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h4 className="font-medium">Diabetes</h4>
+                  <p className="text-sm text-muted-foreground">Blood glucose and metabolic risk assessment</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-3 stagger-item scroll-reveal">
+                <div className="shrink-0 p-1.5 rounded-md bg-primary/10">
+                  <Brain className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h4 className="font-medium">Organ Health</h4>
+                  <p className="text-sm text-muted-foreground">Kidney and liver function analysis</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="space-y-3 pt-4 scroll-reveal">
+              <h3 className="text-2xl font-bold">Personalized Insurance Benefits</h3>
+              <p className="text-muted-foreground">
+                Our risk assessment enables insurance companies to offer personalized premiums and discounts based on your unique health profile, leading to potential cost savings.
+              </p>
+              
+              <div className="flex items-center gap-2 mt-6">
+                <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 relative overflow-hidden group">
+                  <span className="relative z-10 flex items-center gap-1">
+                    Start Your Assessment
+                  </span>
+                  <span className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
+                </Button>
+              </div>
+            </div>
+          </div>
+          
+          <div className="relative scroll-reveal">
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-xl blur-3xl opacity-20" />
+            <div className="relative z-10 bg-gradient-to-b from-white to-slate-50 p-8 rounded-xl shadow-lg border border-slate-100 hover:shadow-xl transition-shadow duration-300">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2 rounded-md bg-primary/10">
+                  <Database className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="text-xl font-bold">Key Benefits</h3>
+              </div>
+              
+              <ul className="space-y-4">
+                <li className="flex items-start gap-3 stagger-item scroll-reveal">
+                  <div className="h-5 w-5 rounded-full bg-green-100 flex items-center justify-center mt-0.5">
+                    <svg viewBox="0 0 24 24" className="h-3 w-3 text-green-600" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
                   </div>
-                </CardFooter>
-              </Card>
-            </Link>
-          ))}
+                  <p className="text-slate-700">In-depth health risk evaluation across multiple disease categories</p>
+                </li>
+                <li className="flex items-start gap-3 stagger-item scroll-reveal">
+                  <div className="h-5 w-5 rounded-full bg-green-100 flex items-center justify-center mt-0.5">
+                    <svg viewBox="0 0 24 24" className="h-3 w-3 text-green-600" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                  <p className="text-slate-700">Personalized prevention strategies and lifestyle recommendations</p>
+                </li>
+                <li className="flex items-start gap-3 stagger-item scroll-reveal">
+                  <div className="h-5 w-5 rounded-full bg-green-100 flex items-center justify-center mt-0.5">
+                    <svg viewBox="0 0 24 24" className="h-3 w-3 text-green-600" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                  <p className="text-slate-700">Insurance premium adjustments based on your health profile</p>
+                </li>
+                <li className="flex items-start gap-3 stagger-item scroll-reveal">
+                  <div className="h-5 w-5 rounded-full bg-green-100 flex items-center justify-center mt-0.5">
+                    <svg viewBox="0 0 24 24" className="h-3 w-3 text-green-600" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                  <p className="text-slate-700">Secure data processing with federated learning technology</p>
+                </li>
+                <li className="flex items-start gap-3 stagger-item scroll-reveal">
+                  <div className="h-5 w-5 rounded-full bg-green-100 flex items-center justify-center mt-0.5">
+                    <svg viewBox="0 0 24 24" className="h-3 w-3 text-green-600" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                  <p className="text-slate-700">Continuous monitoring and real-time health insights</p>
+                </li>
+              </ul>
+            </div>
+          </div>
         </div>
       </div>
     </section>
   );
 }
-
-// Custom diabetes icon (since it's not in lucide-react)
-const DiabetesIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M9 17v-2" />
-    <path d="M12 17v-6" />
-    <path d="M15 17v-4" />
-    <path d="M12 13.5V12" />
-    <path d="M3 3h18" />
-    <path d="M3 21h18" />
-    <path d="M3 12h3" />
-    <path d="M12 3v3" />
-    <path d="M12 18v3" />
-  </svg>
-);
-
-// Custom lungs icon
-const LungsIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M6.081 20C6.946 20 7.588 18.848 7.588 17.429c0-1.118-.041-2.895.454-3.868.496-.973 1.487-1.824 2.294-2.29.576-.337 1.664-.256 2.331-.835.67-.878.493-1.733.493-2.867 0-1.14-.686-2.039-1.18-2.336M6.08 20H3.959M6.08 20l.001-.003M17.92 20c-.865 0-1.507-1.152-1.507-2.571 0-1.118.041-2.895-.454-3.868-.496-.973-1.487-1.824-2.294-2.29-.576-.337-1.664-.256-2.331-.835-.67-.878-.493-1.733-.493-2.867 0-1.14.686-2.039 1.18-2.336M17.92 20h2.121M17.92 20l-.001-.003M11.253 7.252V3" />
-  </svg>
-);
-
-// Custom liver icon
-const LiverIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M14 11h1a5 5 0 0 1 5 5v2a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1v-1a1 1 0 0 0-1-1h-1a1 1 0 0 0-1 1v1a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1v-2a5 5 0 0 1 5-5h1Z" />
-    <path d="M18 9a3 3 0 0 0-3-3H9a3 3 0 0 0-3 3v1" />
-    <path d="M9 14v-4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v4" />
-    <path d="M13 13h1" />
-  </svg>
-);
-
-const services = [
-  {
-    title: "Heart Disease Risk Assessment",
-    description: "Comprehensive analysis of cardiovascular health",
-    icon: Heart,
-    href: "/services/heart",
-    features: [
-      "In-depth heart health evaluation",
-      "Risk factor identification",
-      "Personalized prevention strategies",
-      "Insurance premium adjustment recommendations",
-      "Lifestyle modification suggestions"
-    ]
-  },
-  {
-    title: "Diabetes Risk Analysis",
-    description: "Early detection and prevention of diabetes",
-    icon: DiabetesIcon,
-    href: "/services/diabetes",
-    features: [
-      "Blood glucose prediction models",
-      "Lifestyle risk factor analysis",
-      "Personalized diet recommendations",
-      "Activity level assessment",
-      "Insurance savings calculations"
-    ]
-  },
-  {
-    title: "Cancer Risk Evaluation",
-    description: "Multi-cancer type risk assessment",
-    icon: ScanIcon,
-    href: "/services/cancer",
-    features: [
-      "Genetic predisposition analysis",
-      "Environmental factor evaluation",
-      "Early detection recommendations",
-      "Screening schedule suggestions",
-      "Specialized insurance options"
-    ]
-  },
-  {
-    title: "Kidney Health Check",
-    description: "Comprehensive kidney function analysis",
-    icon: DropletIcon,
-    href: "/services/kidney",
-    features: [
-      "Kidney function prediction",
-      "Chronic kidney disease risk assessment",
-      "Hydration recommendations",
-      "Dietary guidelines",
-      "Preventive care options"
-    ]
-  },
-  {
-    title: "Liver Health Assessment",
-    description: "Complete liver function evaluation",
-    icon: LiverIcon,
-    href: "/services/liver",
-    features: [
-      "Liver function test analysis",
-      "Fatty liver risk prediction",
-      "Alcohol consumption guidance",
-      "Medication interaction warnings",
-      "Personalized health recommendations"
-    ]
-  }
-];

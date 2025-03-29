@@ -1,69 +1,87 @@
-# Welcome to your Lovable project
+# CardiaLink Quantify
 
-## Project info
+A comprehensive health risk assessment application that evaluates heart disease, kidney disease, and diabetes risk factors to provide personalized health risk predictions.
 
-**URL**: https://lovable.dev/projects/16bd5850-4060-4f89-b4a8-c3ec3c126df4
+## Features
 
-## How can I edit this code?
+- **Multi-disease Risk Assessment**: Analyzes risk factors for heart disease, kidney disease, and diabetes
+- **Weighted Prediction Model**: Combines multiple disease risks into a single comprehensive health score
+- **Priority-based Weighting**: Heart disease (50%), kidney disease (30%), and diabetes (20%)
+- **High-Risk Detection**: Automatically elevates overall risk assessment when any individual disease risk exceeds 90%
+- **Interactive User Interface**: Clean, responsive design with intuitive forms and visual risk indicators
+- **Sequential Assessment Process**: Guides users through a step-by-step assessment of each disease
 
-There are several ways of editing your application.
+## Technology Stack
 
-**Use Lovable**
+- **Frontend**: HTML, CSS, JavaScript
+- **Backend**: Flask (Python)
+- **Machine Learning**: TensorFlow, scikit-learn, joblib
+- **Data Processing**: pandas, NumPy
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/16bd5850-4060-4f89-b4a8-c3ec3c126df4) and start prompting.
+## How It Works
 
-Changes made via Lovable will be committed automatically to this repo.
+1. Users are first assessed for heart disease risk based on key cardiovascular indicators
+2. The assessment continues with kidney disease evaluation
+3. Diabetes risk factors are then analyzed
+4. A comprehensive health risk score is calculated using a weighted mean of all three assessments
+5. Results are presented in an easy-to-understand format with visual indicators and risk levels
 
-**Use your preferred IDE**
+## Installation and Setup
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### Prerequisites
+- Python 3.8 or higher
+- Required Python packages (see requirements.txt)
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### Installation Steps
 
-Follow these steps:
+1. Clone the repository:
+   ```
+   git clone https://github.com/yourusername/cardialink-quantify.git
+   cd cardialink-quantify
+   ```
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+2. Create a virtual environment (optional but recommended):
+   ```
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+3. Install dependencies:
+   ```
+   pip install -r requirements.txt
+   ```
 
-# Step 3: Install the necessary dependencies.
-npm i
+4. Run the application:
+   ```
+   cd src/components/model
+   python predict.py
+   ```
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+5. Open a web browser and navigate to:
+   ```
+   http://127.0.0.1:5000/
+   ```
 
-**Edit a file directly in GitHub**
+## Web Application
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+The main application consists of:
+- A responsive health assessment interface
+- Step-by-step disease risk evaluation
+- Visual risk indicators and comprehensive results dashboard
+- Personalized recommendations based on risk assessment
 
-**Use GitHub Codespaces**
+## Future Enhancements
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+- User accounts and saved assessments
+- Detailed health recommendation engine
+- Integration with health tracking devices
+- Expanded disease risk models
+- PDF report generation
 
-## What technologies are used for this project?
+## License
 
-This project is built with .
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## Contributors
 
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/16bd5850-4060-4f89-b4a8-c3ec3c126df4) and click on Share -> Publish.
-
-## I want to use a custom domain - is that possible?
-
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+- Your Name - Initial development and concept

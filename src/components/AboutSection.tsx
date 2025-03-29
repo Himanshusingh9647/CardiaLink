@@ -1,9 +1,8 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
-import { BrainCircuit, Shield, Users, Code, LineChart } from "lucide-react";
+import { BrainCircuit, Shield, Users, Code, LineChart, UserCircle2 } from "lucide-react";
 
 export function AboutSection() {
   return (
@@ -139,34 +138,31 @@ export function AboutSection() {
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                   <div className="flex flex-col items-center text-center">
                     <div className="w-24 h-24 rounded-full bg-primary/10 mb-4 flex items-center justify-center">
-                      <Users className="h-12 w-12 text-primary" />
+                      <UserCircle2 className="h-12 w-12 text-primary" />
                     </div>
-                    <h4 className="text-lg font-medium">Healthcare Professionals</h4>
+                    <h4 className="text-lg font-medium">Himanshu Singh</h4>
                     <p className="text-sm text-muted-foreground mt-2">
-                      Our team includes doctors, nurses, and medical researchers who ensure our models align with clinical best practices.
+                      Leader
                     </p>
                   </div>
                   <div className="flex flex-col items-center text-center">
                     <div className="w-24 h-24 rounded-full bg-primary/10 mb-4 flex items-center justify-center">
-                      <BrainCircuit className="h-12 w-12 text-primary" />
+                      <UserCircle2 className="h-12 w-12 text-primary" />
                     </div>
-                    <h4 className="text-lg font-medium">AI & ML Engineers</h4>
+                    <h4 className="text-lg font-medium">Shivam Kumar</h4>
                     <p className="text-sm text-muted-foreground mt-2">
-                      Specialists in artificial intelligence and machine learning who develop and refine our predictive models.
+                      Member 
                     </p>
                   </div>
                   <div className="flex flex-col items-center text-center">
                     <div className="w-24 h-24 rounded-full bg-primary/10 mb-4 flex items-center justify-center">
-                      <LineChart className="h-12 w-12 text-primary" />
+                      <UserCircle2 className="h-12 w-12 text-primary" />
                     </div>
-                    <h4 className="text-lg font-medium">Data Scientists</h4>
+                    <h4 className="text-lg font-medium">Ayan Dafadar</h4>
                     <p className="text-sm text-muted-foreground mt-2">
-                      Experts who analyze health data patterns and ensure our models deliver accurate and reliable predictions.
+                      Member
                     </p>
                   </div>
-                </div>
-                <div className="text-center mt-8">
-                  <Button variant="outline">Join Our Team</Button>
                 </div>
               </CardContent>
             </Card>

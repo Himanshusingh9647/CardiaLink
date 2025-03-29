@@ -1,5 +1,4 @@
-
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,16 +10,125 @@ import {
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
 import { cn } from "@/lib/utils";
-import { Heart } from "lucide-react";
+import { Heart, ArrowRight } from "lucide-react";
 
 export function Header() {
+  const [scrolled, setScrolled] = useState(false);
+  const [titleText, setTitleText] = useState("");
+  const fullTitle = "CardiaLink";
+  
+  // Animated title effect - fixed to display the full text
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+    let intervalId: NodeJS.Timeout;
+    
+    const animateTitle = () => {
+      // Use a recursive timeout approach to ensure all letters are typed
+      let currentIndex = 0;
+      
+      const typeNextChar = () => {
+        if (currentIndex <= fullTitle.length) {
+          setTitleText(fullTitle.substring(0, currentIndex));
+          currentIndex++;
+          timeoutId = setTimeout(typeNextChar, 150);
+        }
+      };
+      
+      typeNextChar();
+    };
+    
+    // Start the animation after a brief delay
+    timeoutId = setTimeout(animateTitle, 500);
+    
+    // Clean up
+    return () => {
+      clearTimeout(timeoutId);
+      clearInterval(intervalId);
+    };
+  }, []); // Only run on mount
+  
+  // Add cursor animation CSS
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.innerHTML = `
+      @keyframes cursor-blink {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0; }
+      }
+      .animate-cursor {
+        animation: cursor-blink 1s step-end infinite;
+      }
+    `;
+    document.head.appendChild(style);
+    
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+  
+  // Handle scroll event to change header appearance
+  useEffect(() => {
+    const handleScroll = () => {
+      const isScrolled = window.scrollY > 20;
+      if (isScrolled !== scrolled) {
+        setScrolled(isScrolled);
+      }
+    };
+    
+    window.addEventListener('scroll', handleScroll);
+    
+    // Check initial scroll position
+    handleScroll();
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, [scrolled]);
+  
+  // Smooth scroll to sections
+  const scrollToSection = (sectionId: string) => (e: React.MouseEvent) => {
+    e.preventDefault();
+    const section = document.getElementById(sectionId);
+    if (section) {
+      window.scrollTo({
+        top: section.offsetTop - 80, // Offset for header
+        behavior: 'smooth'
+      });
+    }
+  };
+
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center">
-        <div className="flex items-center gap-2 font-bold text-2xl text-primary mr-4">
-          <Heart className="h-6 w-6 fill-primary text-primary" />
-          <span>CardiaLink</span>
-        </div>
+    <header 
+      className={cn(
+        "sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-all duration-300",
+        scrolled ? "shadow-md h-14" : "h-16"
+      )}
+    >
+      <div className={cn(
+        "container flex items-center h-full transition-all duration-300",
+        scrolled ? "py-1" : "py-2"
+      )}>
+        <Link to="/" className="flex items-center gap-2 font-bold text-2xl text-primary mr-4 group">
+          <div className="relative">
+            <Heart className={cn(
+              "fill-blue-500 text-blue-500 transition-all duration-300 group-hover:scale-110",
+              scrolled ? "h-5 w-5" : "h-6 w-6"
+            )} />
+            <span className="absolute -top-1 -right-1 w-2 h-2 bg-blue-500 rounded-full animate-ping opacity-75"></span>
+          </div>
+          <div className="overflow-hidden whitespace-nowrap">
+            <span className={cn(
+              "transition-all duration-300 text-blue-600 font-bold relative inline-block min-w-24",
+              scrolled ? "text-xl" : "text-2xl"
+            )}>
+              {titleText || "C"}
+              {titleText.length < fullTitle.length && (
+                <span className="absolute right-0 top-0 h-full w-1 bg-blue-600 animate-cursor"></span>
+              )}
+            </span>
+          </div>
+        </Link>
+        
         <NavigationMenu className="ml-auto">
           <NavigationMenuList>
             <NavigationMenuItem>
@@ -33,20 +141,13 @@ export function Header() {
               </Link>
             </NavigationMenuItem>
             <NavigationMenuItem>
-              <NavigationMenuTrigger>Services</NavigationMenuTrigger>
-              <NavigationMenuContent>
-                <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
-                  {services.map((service) => (
-                    <ListItem
-                      key={service.title}
-                      title={service.title}
-                      href={service.href}
-                    >
-                      {service.description}
-                    </ListItem>
-                  ))}
-                </ul>
-              </NavigationMenuContent>
+              <a href="#services" onClick={scrollToSection('services')}>
+                <NavigationMenuLink className={cn(
+                  "group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50"
+                )}>
+                  Services
+                </NavigationMenuLink>
+              </a>
             </NavigationMenuItem>
             <NavigationMenuItem>
               <Link to="/about">
@@ -57,21 +158,12 @@ export function Header() {
                 </NavigationMenuLink>
               </Link>
             </NavigationMenuItem>
-            <NavigationMenuItem>
-              <Link to="/login">
-                <NavigationMenuLink className={cn(
-                  "group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50"
-                )}>
-                  Login
-                </NavigationMenuLink>
-              </Link>
-            </NavigationMenuItem>
           </NavigationMenuList>
         </NavigationMenu>
         <div className="ml-4">
-          <Link to="/signup">
-            <Button size="sm" className="ml-auto">
-              Get Started
+          <Link to="/login">
+            <Button size="sm" className="ml-auto flex items-center gap-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
+              Login/Signup
             </Button>
           </Link>
         </div>

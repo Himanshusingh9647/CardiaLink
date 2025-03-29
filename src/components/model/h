@@ -1,0 +1,50 @@
+import numpy as np
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import confusion_matrix, accuracy_score
+
+# Load dataset from Kaggle (Ensure the CSV file is in the working directory)
+data = pd.read_csv('C:\Users\himan\OneDrive\Desktop\cardialink-quantify\src\components\model\kidney_disease.csv')
+
+# Rename columns for consistency
+data.columns = [col.strip().lower().replace(" ", "_") for col in data.columns]
+
+# Fix inconsistent labels
+data['classification'] = data['classification'].replace("ckd\t", "ckd")
+
+# Convert target labels to numerical values
+data['classification'] = data['classification'].replace(['ckd', 'notckd'], [1, 0])
+
+# Convert necessary columns to numeric, coercing errors
+data = data.apply(pd.to_numeric, errors='coerce')
+
+# Handle missing values
+df = data.dropna(axis=0)
+print(f"Before dropping NaN values: {data.shape}")
+print(f"After dropping NaN values: {df.shape}")
+
+# Reset index
+df.index = range(0, len(df), 1)
+
+# Fix incorrect values
+df['wc'] = df['wc'].replace(["\t6200", "\t8400"], [6200, 8400])
+
+# Feature selection (drop unnecessary or categorical columns)
+X = df.drop(['classification', 'sg', 'appet', 'rc', 'pcv', 'hemo', 'sod'], axis=1)
+y = df['classification']
+
+# Split data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Train model
+model = RandomForestClassifier(n_estimators=20, random_state=42)
+model.fit(X_train, y_train)
+
+# Evaluate model
+y_pred = model.predict(X_test)
+conf_matrix = confusion_matrix(y_test, y_pred)
+accuracy = round(accuracy_score(y_test, y_pred) * 100, 2)
+
+print("Confusion Matrix:\n", conf_matrix)
+print(f"Accuracy: {accuracy}%")
