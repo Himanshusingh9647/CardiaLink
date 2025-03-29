@@ -3141,28 +3141,12 @@ def combined_results():
         (diabetes_risk * diabetes_weight)
     ) / total_weight
     
-    # Force combined risk to be high if any individual risk is extremely high
-    if has_extremely_high_risk and weighted_risk < 0.9:
-        print("Applying high risk override due to at least one disease risk exceeding 90%")
-        weighted_risk = max(weighted_risk, 0.9)  # Ensure minimum 90% risk
-    
-    # Use stored combined risk or recalculated weighted risk
-    combined_risk = session.get('combined_risk', weighted_risk)
-    
     return render_template_string(RESULTS_TEMPLATE, 
                                    heart_risk=heart_risk,
                                    kidney_risk=kidney_risk,
                                    diabetes_risk=diabetes_risk,
-                                   combined_risk=combined_risk)
+                                   combined_risk=weighted_risk)
 
 if __name__ == '__main__':
-    import os
-    port = int(os.environ.get('PORT', 5000))
-    
-    # Check if running in production (Railway or Render)
-    if os.environ.get('RAILWAY_ENVIRONMENT') == 'production' or os.environ.get('RENDER_ENVIRONMENT') == 'production':
-        print(f"Disease Risk Assessment App is running in production mode on port {port}")
-        app.run(host='0.0.0.0', port=port, debug=False)
-    else:
-        print(f"Disease Risk Assessment App is running in development mode on http://127.0.0.1:{port}/")
-        app.run(debug=True)
+    print("Disease Risk Assessment App is running on http://127.0.0.1:5000/")
+    app.run(debug=True)

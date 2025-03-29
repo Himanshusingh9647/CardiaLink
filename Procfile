@@ -1,1 +1,0 @@
-web: cd src/components/model && python predict.py 
