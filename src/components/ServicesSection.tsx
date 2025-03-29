@@ -1,7 +1,7 @@
 
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Heart, Diabetes, Lungs, Droplet, Scan } from "lucide-react";
+import { Heart, Activity, Scan as ScanIcon, Droplet as DropletIcon, Liver } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function ServicesSection() {
@@ -54,8 +54,8 @@ export function ServicesSection() {
   );
 }
 
-// Custom icons for services
-const Diabetes = () => (
+// Custom diabetes icon (since it's not in lucide-react)
+const DiabetesIcon = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width="24"
@@ -79,29 +79,8 @@ const Diabetes = () => (
   </svg>
 );
 
-const Scan = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M3 7V5a2 2 0 0 1 2-2h2" />
-    <path d="M17 3h2a2 2 0 0 1 2 2v2" />
-    <path d="M21 17v2a2 2 0 0 1-2 2h-2" />
-    <path d="M7 21H5a2 2 0 0 1-2-2v-2" />
-    <path d="M8 14s1.5 2 4 2 4-2 4-2" />
-    <path d="M9 9h.01" />
-    <path d="M15 9h.01" />
-  </svg>
-);
-
-const Lungs = () => (
+// Custom lungs icon
+const LungsIcon = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width="24"
@@ -114,22 +93,6 @@ const Lungs = () => (
     strokeLinejoin="round"
   >
     <path d="M6.081 20C6.946 20 7.588 18.848 7.588 17.429c0-1.118-.041-2.895.454-3.868.496-.973 1.487-1.824 2.294-2.29.576-.337 1.664-.256 2.331-.835.67-.878.493-1.733.493-2.867 0-1.14-.686-2.039-1.18-2.336M6.08 20H3.959M6.08 20l.001-.003M17.92 20c-.865 0-1.507-1.152-1.507-2.571 0-1.118.041-2.895-.454-3.868-.496-.973-1.487-1.824-2.294-2.29-.576-.337-1.664-.256-2.331-.835-.67-.878-.493-1.733-.493-2.867 0-1.14.686-2.039 1.18-2.336M17.92 20h2.121M17.92 20l-.001-.003M11.253 7.252V3" />
-  </svg>
-);
-
-const Droplet = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z" />
   </svg>
 );
 
@@ -149,7 +112,7 @@ const services = [
   {
     title: "Diabetes Risk Analysis",
     description: "Early detection and prevention of diabetes",
-    icon: Diabetes,
+    icon: DiabetesIcon,
     features: [
       "Blood glucose prediction models",
       "Lifestyle risk factor analysis",
@@ -161,7 +124,7 @@ const services = [
   {
     title: "Cancer Risk Evaluation",
     description: "Multi-cancer type risk assessment",
-    icon: Scan,
+    icon: ScanIcon,
     features: [
       "Genetic predisposition analysis",
       "Environmental factor evaluation",
@@ -173,7 +136,7 @@ const services = [
   {
     title: "Kidney Health Check",
     description: "Comprehensive kidney function analysis",
-    icon: Droplet,
+    icon: DropletIcon,
     features: [
       "Kidney function prediction",
       "Chronic kidney disease risk assessment",
@@ -185,7 +148,7 @@ const services = [
   {
     title: "Liver Health Assessment",
     description: "Complete liver function evaluation",
-    icon: Lungs,
+    icon: LungsIcon,
     features: [
       "Liver function test analysis",
       "Fatty liver risk prediction",
