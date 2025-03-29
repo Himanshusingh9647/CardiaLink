@@ -2735,35 +2735,95 @@ def index():
 def heart_disease():
     prediction = None
     
-    # Check if we have scores from previous assessments
-    has_previous_scores = 'heart_risk' in session
-    
     if request.method == 'POST':
-        # Extract values from form
-        patient_data = {}
-        for feature in heart_features:
-            patient_data[feature] = float(request.form.get(feature, 0))
-        
-        # Convert to numpy array and reshape for prediction
-        features = []
-        for feature in heart_features:
-            features.append(patient_data[feature])
-        
-        features_array = np.array(features).reshape(1, -1)
-        scaled_features = heart_scaler.transform(features_array)
-        
-        # Make prediction
-        prediction_result = heart_model.predict(scaled_features)
-        prediction = float(prediction_result[0][0])
-        
-        # Store heart risk score in session
-        session['heart_risk'] = prediction
-        print(f"Heart risk score saved: {prediction}")
-        
-        # Redirect to kidney assessment
-        return redirect(url_for('kidney_disease'))
+        try:
+            # Get form data with error handling
+            try:
+                age = float(request.form['age'])
+            except (KeyError, ValueError):
+                age = 50.0  # Default value if missing or invalid
+                
+            try:
+                sex = float(request.form['sex'])
+            except (KeyError, ValueError):
+                sex = 0.0  # Default value
+                
+            try:
+                cp = float(request.form['cp'])
+            except (KeyError, ValueError):
+                cp = 0.0  # Default value
+                
+            try:
+                trestbps = float(request.form['trestbps'])
+            except (KeyError, ValueError):
+                trestbps = 120.0  # Default value
+                
+            try:
+                chol = float(request.form['chol'])
+            except (KeyError, ValueError):
+                chol = 200.0  # Default value
+                
+            try:
+                fbs = float(request.form['fbs'])
+            except (KeyError, ValueError):
+                fbs = 0.0  # Default value
+                
+            try:
+                restecg = float(request.form['restecg'])
+            except (KeyError, ValueError):
+                restecg = 0.0  # Default value
+                
+            try:
+                thalach = float(request.form['thalach'])
+            except (KeyError, ValueError):
+                thalach = 150.0  # Default value
+            
+            # Optional fields with defaults
+            try:
+                exang = float(request.form.get('exang', 0))
+            except ValueError:
+                exang = 0.0
+                
+            try:
+                oldpeak = float(request.form.get('oldpeak', 0))
+            except ValueError:
+                oldpeak = 0.0
+                
+            try:
+                slope = float(request.form.get('slope', 0))
+            except ValueError:
+                slope = 0.0
+                
+            try:
+                ca = float(request.form.get('ca', 0))
+            except ValueError:
+                ca = 0.0
+                
+            try:
+                thal = float(request.form.get('thal', 0))
+            except ValueError:
+                thal = 0.0
+            
+            # Convert to numpy array and reshape for prediction
+            features = np.array([age, sex, cp, trestbps, chol, fbs, restecg, thalach, exang, oldpeak, slope, ca, thal]).reshape(1, -1)
+            scaled_features = heart_scaler.transform(features)
+            
+            # Make prediction
+            prediction_result = heart_model.predict(scaled_features)
+            prediction = float(prediction_result[0][0])
+            
+            # Store heart risk score in session
+            session['heart_risk'] = prediction
+            print(f"Heart risk score saved: {prediction}")
+            
+            # Redirect to kidney assessment
+            return redirect(url_for('kidney_disease'))
+            
+        except Exception as e:
+            print(f"Error processing heart disease form: {e}")
+            return render_template_string(HEART_TEMPLATE, active_tab="heart", prediction=None, error="Invalid input. Please try again.")
     
-    return render_template_string(HEART_TEMPLATE, active_tab="heart", prediction=prediction, next_assessment="kidney")
+    return render_template_string(HEART_TEMPLATE, active_tab="heart", prediction=None)
 
 @app.route('/kidney', methods=['GET', 'POST'])
 def kidney_disease():
@@ -3080,5 +3140,13 @@ def combined_results():
                                    combined_risk=combined_risk)
 
 if __name__ == '__main__':
-    print("Disease Risk Assessment App is running on http://127.0.0.1:5000/")
-    app.run(debug=True)
+    import os
+    port = int(os.environ.get('PORT', 5000))
+    
+    # Check if running on Railway
+    if os.environ.get('RAILWAY_ENVIRONMENT') == 'production':
+        print(f"Disease Risk Assessment App is running in production mode on port {port}")
+        app.run(host='0.0.0.0', port=port, debug=False)
+    else:
+        print(f"Disease Risk Assessment App is running in development mode on http://127.0.0.1:{port}/")
+        app.run(debug=True)

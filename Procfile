@@ -1,1 +1,1 @@
-web: cd src/components/model && gunicorn predict:app 
+web: cd src/components/model && python predict.py 
