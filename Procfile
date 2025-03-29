@@ -1,0 +1,1 @@
+web: cd src/components/model && gunicorn predict:app 

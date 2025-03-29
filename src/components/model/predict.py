@@ -3082,3 +3082,38 @@ def combined_results():
 if __name__ == '__main__':
     print("Disease Risk Assessment App is running on http://127.0.0.1:5000/")
     app.run(debug=True) 
+
+# Update to make it work with Railway deployment
+if __name__ == '__main__':
+    import os
+    port = int(os.environ.get('PORT', 5000))
+    print(f"Disease Risk Assessment App is running on port {port}")
+    app.run(host='0.0.0.0', port=port, debug=False)
+
+# Replace with just one version that works locally and in production
+if __name__ == '__main__':
+    import os
+    port = int(os.environ.get('PORT', 5000))
+    # Determine if running in production or development
+    is_production = os.environ.get('RAILWAY_ENVIRONMENT') == 'production'
+    
+    if is_production:
+        print(f"Disease Risk Assessment App is running in production on port {port}")
+        app.run(host='0.0.0.0', port=port, debug=False)
+    else:
+        print("Disease Risk Assessment App is running in development on http://127.0.0.1:5000/")
+        app.run(debug=True)
+
+# FINAL VERSION - Keep only this version
+if __name__ == '__main__':
+    import os
+    port = int(os.environ.get('PORT', 5000))
+    # Determine if running in production or development
+    is_production = os.environ.get('RAILWAY_ENVIRONMENT') == 'production'
+    
+    if is_production:
+        print(f"Disease Risk Assessment App is running in production on port {port}")
+        app.run(host='0.0.0.0', port=port, debug=False)
+    else:
+        print("Disease Risk Assessment App is running in development on http://127.0.0.1:5000/")
+        app.run(debug=True)
