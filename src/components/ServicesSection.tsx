@@ -7,21 +7,21 @@ import { Link } from "react-router-dom";
 
 export function ServicesSection() {
   return (
-    <section className="py-16 bg-muted/50" id="services">
+    <section className="py-12 md:py-16 bg-muted/50" id="services">
       <div className="container px-4 md:px-6">
-        <div className="flex flex-col items-center justify-center space-y-4 text-center mb-12">
+        <div className="flex flex-col items-center justify-center space-y-4 text-center mb-8 md:mb-12">
           <div className="inline-block rounded-lg bg-primary/10 px-3 py-1 text-sm text-primary">
             Services
           </div>
-          <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">
+          <h2 className="text-2xl md:text-3xl lg:text-5xl font-bold tracking-tighter">
             Our Health Assessment Services
           </h2>
-          <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+          <p className="max-w-[900px] text-muted-foreground text-sm md:text-base lg:text-xl/relaxed">
             Comprehensive health risk assessments across multiple disease categories
           </p>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8">
           {services.map((service, index) => (
             <Link 
               key={service.title} 
@@ -30,29 +30,29 @@ export function ServicesSection() {
             >
               <Card className={cn(
                 "h-full shadow-sm hover:shadow-lg border-2 border-muted hover:border-primary/20 transition-all duration-300",
-                index === 0 && "lg:col-span-2 lg:row-span-2 bg-gradient-to-br from-primary/5 to-background"
+                index === 0 && "sm:col-span-2 lg:col-span-1 lg:row-span-1 bg-gradient-to-br from-primary/5 to-background"
               )}>
-                <CardHeader className="p-6 space-y-4">
+                <CardHeader className="p-4 md:p-6 space-y-2 md:space-y-4">
                   <div className="flex items-center gap-3">
                     <div className="p-2 rounded-full bg-primary/10">
-                      <service.icon className="h-6 w-6 text-primary" />
+                      <service.icon className="h-5 w-5 md:h-6 md:w-6 text-primary" />
                     </div>
-                    <CardTitle className="text-xl font-bold">{service.title}</CardTitle>
+                    <CardTitle className="text-base md:text-xl font-bold">{service.title}</CardTitle>
                   </div>
-                  <CardDescription className="text-base">{service.description}</CardDescription>
+                  <CardDescription className="text-xs md:text-base">{service.description}</CardDescription>
                 </CardHeader>
-                <CardContent className="p-6 pt-0">
-                  <ul className="space-y-3">
+                <CardContent className="p-4 md:p-6 pt-0">
+                  <ul className="space-y-2 md:space-y-3">
                     {service.features.map((feature) => (
-                      <li key={feature} className="flex items-center gap-2 text-sm">
-                        <div className="h-2 w-2 rounded-full bg-primary" />
+                      <li key={feature} className="flex items-center gap-2 text-xs md:text-sm">
+                        <div className="h-1.5 w-1.5 rounded-full bg-primary" />
                         <span>{feature}</span>
                       </li>
                     ))}
                   </ul>
                 </CardContent>
-                <CardFooter className="p-6 pt-0 flex justify-end">
-                  <div className="text-sm font-medium text-primary flex items-center gap-1">
+                <CardFooter className="p-4 md:p-6 pt-0 flex justify-end">
+                  <div className="text-xs md:text-sm font-medium text-primary flex items-center gap-1">
                     View details
                     <svg 
                       xmlns="http://www.w3.org/2000/svg" 
