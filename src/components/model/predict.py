@@ -13,6 +13,21 @@ heart_scaler = load('scaler.joblib')
 with open('feature_names.json', 'r') as f:
     heart_features = json.load(f)
 
+# Add better error handling for model loading
+try:
+    # Load the heart disease model, scaler, and feature names
+    heart_model = tf.keras.models.load_model('heart_disease_model.h5')
+    heart_scaler = load('scaler.joblib')
+    with open('feature_names.json', 'r') as f:
+        heart_features = json.load(f)
+    print("Heart disease model loaded successfully")
+except Exception as e:
+    print(f"Error loading heart disease model: {e}")
+    # Create placeholder model in case of loading failure
+    heart_model = None
+    heart_scaler = None
+    heart_features = []
+
 # Load or train the kidney disease model
 # Since the 'h' file contains training code, we'll train it when this script runs
 import pandas as pd
@@ -2809,14 +2824,15 @@ def heart_disease():
             scaled_features = heart_scaler.transform(features)
             
             # Make prediction
-            prediction_result = heart_model.predict(scaled_features)
-            prediction = float(prediction_result[0][0])
+            prediction = heart_model.predict(scaled_features)[0][0]
+            prediction = float(prediction)  # Convert to Python float
             
             # Store heart risk score in session
             session['heart_risk'] = prediction
+            
             print(f"Heart risk score saved: {prediction}")
             
-            # Redirect to kidney assessment
+            # Redirect to kidney disease assessment
             return redirect(url_for('kidney_disease'))
             
         except Exception as e:
@@ -3143,8 +3159,8 @@ if __name__ == '__main__':
     import os
     port = int(os.environ.get('PORT', 5000))
     
-    # Check if running on Railway
-    if os.environ.get('RAILWAY_ENVIRONMENT') == 'production':
+    # Check if running in production (Railway or Render)
+    if os.environ.get('RAILWAY_ENVIRONMENT') == 'production' or os.environ.get('RENDER_ENVIRONMENT') == 'production':
         print(f"Disease Risk Assessment App is running in production mode on port {port}")
         app.run(host='0.0.0.0', port=port, debug=False)
     else:

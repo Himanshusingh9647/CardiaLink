@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: cardialink-quantify
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: cd src/components/model && python predict.py
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.9.0
+      - key: RENDER_ENVIRONMENT
+        value: production 
