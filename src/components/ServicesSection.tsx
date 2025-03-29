@@ -1,0 +1,197 @@
+
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Heart, Diabetes, Lungs, Droplet, Scan } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+export function ServicesSection() {
+  return (
+    <section className="py-16" id="services">
+      <div className="container px-4 md:px-6">
+        <div className="flex flex-col items-center justify-center space-y-4 text-center">
+          <div className="space-y-2">
+            <div className="inline-block rounded-lg bg-primary/10 px-3 py-1 text-sm text-primary">
+              Services
+            </div>
+            <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">
+              Our Health Assessment Services
+            </h2>
+            <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+              Comprehensive health risk assessments across multiple disease categories
+            </p>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-12">
+          {services.map((service, index) => (
+            <Card key={service.title} className={cn("overflow-hidden transition-all hover:shadow-lg", 
+              index === 0 && "lg:col-span-2 lg:row-span-2")}>
+              <CardHeader className="p-6">
+                <div className="flex items-center gap-2">
+                  <service.icon className="h-6 w-6 text-primary" />
+                  <CardTitle>{service.title}</CardTitle>
+                </div>
+                <CardDescription>{service.description}</CardDescription>
+              </CardHeader>
+              <CardContent className="p-6 pt-0">
+                <ul className="space-y-2 text-sm">
+                  {service.features.map((feature) => (
+                    <li key={feature} className="flex items-center">
+                      <div className="mr-2 h-1.5 w-1.5 rounded-full bg-primary" />
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+              <CardFooter className="p-6 pt-0">
+                <Button variant="outline" className="w-full">Learn More</Button>
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// Custom icons for services
+const Diabetes = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M9 17v-2" />
+    <path d="M12 17v-6" />
+    <path d="M15 17v-4" />
+    <path d="M12 13.5V12" />
+    <path d="M3 3h18" />
+    <path d="M3 21h18" />
+    <path d="M3 12h3" />
+    <path d="M12 3v3" />
+    <path d="M12 18v3" />
+  </svg>
+);
+
+const Scan = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M3 7V5a2 2 0 0 1 2-2h2" />
+    <path d="M17 3h2a2 2 0 0 1 2 2v2" />
+    <path d="M21 17v2a2 2 0 0 1-2 2h-2" />
+    <path d="M7 21H5a2 2 0 0 1-2-2v-2" />
+    <path d="M8 14s1.5 2 4 2 4-2 4-2" />
+    <path d="M9 9h.01" />
+    <path d="M15 9h.01" />
+  </svg>
+);
+
+const Lungs = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M6.081 20C6.946 20 7.588 18.848 7.588 17.429c0-1.118-.041-2.895.454-3.868.496-.973 1.487-1.824 2.294-2.29.576-.337 1.664-.256 2.331-.835.67-.878.493-1.733.493-2.867 0-1.14-.686-2.039-1.18-2.336M6.08 20H3.959M6.08 20l.001-.003M17.92 20c-.865 0-1.507-1.152-1.507-2.571 0-1.118.041-2.895-.454-3.868-.496-.973-1.487-1.824-2.294-2.29-.576-.337-1.664-.256-2.331-.835-.67-.878-.493-1.733-.493-2.867 0-1.14.686-2.039 1.18-2.336M17.92 20h2.121M17.92 20l-.001-.003M11.253 7.252V3" />
+  </svg>
+);
+
+const Droplet = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z" />
+  </svg>
+);
+
+const services = [
+  {
+    title: "Heart Disease Risk Assessment",
+    description: "Comprehensive analysis of cardiovascular health",
+    icon: Heart,
+    features: [
+      "In-depth heart health evaluation",
+      "Risk factor identification",
+      "Personalized prevention strategies",
+      "Insurance premium adjustment recommendations",
+      "Lifestyle modification suggestions"
+    ]
+  },
+  {
+    title: "Diabetes Risk Analysis",
+    description: "Early detection and prevention of diabetes",
+    icon: Diabetes,
+    features: [
+      "Blood glucose prediction models",
+      "Lifestyle risk factor analysis",
+      "Personalized diet recommendations",
+      "Activity level assessment",
+      "Insurance savings calculations"
+    ]
+  },
+  {
+    title: "Cancer Risk Evaluation",
+    description: "Multi-cancer type risk assessment",
+    icon: Scan,
+    features: [
+      "Genetic predisposition analysis",
+      "Environmental factor evaluation",
+      "Early detection recommendations",
+      "Screening schedule suggestions",
+      "Specialized insurance options"
+    ]
+  },
+  {
+    title: "Kidney Health Check",
+    description: "Comprehensive kidney function analysis",
+    icon: Droplet,
+    features: [
+      "Kidney function prediction",
+      "Chronic kidney disease risk assessment",
+      "Hydration recommendations",
+      "Dietary guidelines",
+      "Preventive care options"
+    ]
+  },
+  {
+    title: "Liver Health Assessment",
+    description: "Complete liver function evaluation",
+    icon: Lungs,
+    features: [
+      "Liver function test analysis",
+      "Fatty liver risk prediction",
+      "Alcohol consumption guidance",
+      "Medication interaction warnings",
+      "Personalized health recommendations"
+    ]
+  }
+];
