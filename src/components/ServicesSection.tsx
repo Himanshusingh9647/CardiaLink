@@ -1,8 +1,9 @@
 
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Heart, Activity, Scan as ScanIcon, Droplet as DropletIcon, Liver } from "lucide-react";
+import { Heart, Activity, Scan as ScanIcon, Droplet as DropletIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Link } from "react-router-dom";
 
 export function ServicesSection() {
   return (
@@ -24,29 +25,32 @@ export function ServicesSection() {
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-12">
           {services.map((service, index) => (
-            <Card key={service.title} className={cn("overflow-hidden transition-all hover:shadow-lg", 
-              index === 0 && "lg:col-span-2 lg:row-span-2")}>
-              <CardHeader className="p-6">
-                <div className="flex items-center gap-2">
-                  <service.icon className="h-6 w-6 text-primary" />
-                  <CardTitle>{service.title}</CardTitle>
-                </div>
-                <CardDescription>{service.description}</CardDescription>
-              </CardHeader>
-              <CardContent className="p-6 pt-0">
-                <ul className="space-y-2 text-sm">
-                  {service.features.map((feature) => (
-                    <li key={feature} className="flex items-center">
-                      <div className="mr-2 h-1.5 w-1.5 rounded-full bg-primary" />
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-              <CardFooter className="p-6 pt-0">
-                <Button variant="outline" className="w-full">Learn More</Button>
-              </CardFooter>
-            </Card>
+            <Link 
+              key={service.title} 
+              to={service.href} 
+              className="block transition-transform hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-lg"
+            >
+              <Card className={cn("overflow-hidden h-full hover:shadow-lg cursor-pointer", 
+                index === 0 && "lg:col-span-2 lg:row-span-2")}>
+                <CardHeader className="p-6">
+                  <div className="flex items-center gap-2">
+                    <service.icon className="h-6 w-6 text-primary" />
+                    <CardTitle>{service.title}</CardTitle>
+                  </div>
+                  <CardDescription>{service.description}</CardDescription>
+                </CardHeader>
+                <CardContent className="p-6 pt-0">
+                  <ul className="space-y-2 text-sm">
+                    {service.features.map((feature) => (
+                      <li key={feature} className="flex items-center">
+                        <div className="mr-2 h-1.5 w-1.5 rounded-full bg-primary" />
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            </Link>
           ))}
         </div>
       </div>
@@ -96,11 +100,32 @@ const LungsIcon = () => (
   </svg>
 );
 
+// Custom liver icon
+const LiverIcon = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M14 11h1a5 5 0 0 1 5 5v2a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1v-1a1 1 0 0 0-1-1h-1a1 1 0 0 0-1 1v1a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1v-2a5 5 0 0 1 5-5h1Z" />
+    <path d="M18 9a3 3 0 0 0-3-3H9a3 3 0 0 0-3 3v1" />
+    <path d="M9 14v-4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v4" />
+    <path d="M13 13h1" />
+  </svg>
+);
+
 const services = [
   {
     title: "Heart Disease Risk Assessment",
     description: "Comprehensive analysis of cardiovascular health",
     icon: Heart,
+    href: "/services/heart",
     features: [
       "In-depth heart health evaluation",
       "Risk factor identification",
@@ -113,6 +138,7 @@ const services = [
     title: "Diabetes Risk Analysis",
     description: "Early detection and prevention of diabetes",
     icon: DiabetesIcon,
+    href: "/services/diabetes",
     features: [
       "Blood glucose prediction models",
       "Lifestyle risk factor analysis",
@@ -125,6 +151,7 @@ const services = [
     title: "Cancer Risk Evaluation",
     description: "Multi-cancer type risk assessment",
     icon: ScanIcon,
+    href: "/services/cancer",
     features: [
       "Genetic predisposition analysis",
       "Environmental factor evaluation",
@@ -137,6 +164,7 @@ const services = [
     title: "Kidney Health Check",
     description: "Comprehensive kidney function analysis",
     icon: DropletIcon,
+    href: "/services/kidney",
     features: [
       "Kidney function prediction",
       "Chronic kidney disease risk assessment",
@@ -148,7 +176,8 @@ const services = [
   {
     title: "Liver Health Assessment",
     description: "Complete liver function evaluation",
-    icon: LungsIcon,
+    icon: LiverIcon,
+    href: "/services/liver",
     features: [
       "Liver function test analysis",
       "Fatty liver risk prediction",
