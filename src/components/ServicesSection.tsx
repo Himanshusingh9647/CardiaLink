@@ -7,48 +7,70 @@ import { Link } from "react-router-dom";
 
 export function ServicesSection() {
   return (
-    <section className="py-16" id="services">
+    <section className="py-16 bg-muted/50" id="services">
       <div className="container px-4 md:px-6">
-        <div className="flex flex-col items-center justify-center space-y-4 text-center">
-          <div className="space-y-2">
-            <div className="inline-block rounded-lg bg-primary/10 px-3 py-1 text-sm text-primary">
-              Services
-            </div>
-            <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">
-              Our Health Assessment Services
-            </h2>
-            <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-              Comprehensive health risk assessments across multiple disease categories
-            </p>
+        <div className="flex flex-col items-center justify-center space-y-4 text-center mb-12">
+          <div className="inline-block rounded-lg bg-primary/10 px-3 py-1 text-sm text-primary">
+            Services
           </div>
+          <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">
+            Our Health Assessment Services
+          </h2>
+          <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+            Comprehensive health risk assessments across multiple disease categories
+          </p>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-8">
           {services.map((service, index) => (
             <Link 
               key={service.title} 
               to={service.href} 
-              className="block transition-transform hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-lg"
+              className="block transition-all duration-300 hover:-translate-y-2 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-lg"
             >
-              <Card className={cn("overflow-hidden h-full hover:shadow-lg cursor-pointer", 
-                index === 0 && "lg:col-span-2 lg:row-span-2")}>
-                <CardHeader className="p-6">
-                  <div className="flex items-center gap-2">
-                    <service.icon className="h-6 w-6 text-primary" />
-                    <CardTitle>{service.title}</CardTitle>
+              <Card className={cn(
+                "h-full shadow-sm hover:shadow-lg border-2 border-muted hover:border-primary/20 transition-all duration-300",
+                index === 0 && "lg:col-span-2 lg:row-span-2 bg-gradient-to-br from-primary/5 to-background"
+              )}>
+                <CardHeader className="p-6 space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-full bg-primary/10">
+                      <service.icon className="h-6 w-6 text-primary" />
+                    </div>
+                    <CardTitle className="text-xl font-bold">{service.title}</CardTitle>
                   </div>
-                  <CardDescription>{service.description}</CardDescription>
+                  <CardDescription className="text-base">{service.description}</CardDescription>
                 </CardHeader>
                 <CardContent className="p-6 pt-0">
-                  <ul className="space-y-2 text-sm">
+                  <ul className="space-y-3">
                     {service.features.map((feature) => (
-                      <li key={feature} className="flex items-center">
-                        <div className="mr-2 h-1.5 w-1.5 rounded-full bg-primary" />
-                        {feature}
+                      <li key={feature} className="flex items-center gap-2 text-sm">
+                        <div className="h-2 w-2 rounded-full bg-primary" />
+                        <span>{feature}</span>
                       </li>
                     ))}
                   </ul>
                 </CardContent>
+                <CardFooter className="p-6 pt-0 flex justify-end">
+                  <div className="text-sm font-medium text-primary flex items-center gap-1">
+                    View details
+                    <svg 
+                      xmlns="http://www.w3.org/2000/svg" 
+                      width="16" 
+                      height="16" 
+                      viewBox="0 0 24 24" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      strokeWidth="2" 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      className="ml-1"
+                    >
+                      <path d="M5 12h14"></path>
+                      <path d="m12 5 7 7-7 7"></path>
+                    </svg>
+                  </div>
+                </CardFooter>
               </Card>
             </Link>
           ))}
