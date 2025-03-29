@@ -4,6 +4,61 @@ import { Link } from "react-router-dom";
 import { useEffect } from "react";
 
 export function ServicesSection() {
+  // Redirect to the prediction page with loading animation
+  const redirectToPrediction = () => {
+    // Create and show loading overlay
+    const overlay = document.createElement('div');
+    overlay.className = 'loading-overlay';
+    
+    // Create pulsing medical logo
+    const logo = document.createElement('div');
+    logo.className = 'medical-logo';
+    
+    // Create animated text
+    const text = document.createElement('div');
+    text.className = 'loading-text';
+    text.innerText = 'Initializing Health Assessment...';
+    
+    // Create progress bar
+    const progressContainer = document.createElement('div');
+    progressContainer.className = 'progress-container';
+    
+    const progressBar = document.createElement('div');
+    progressBar.className = 'progress-bar';
+    progressContainer.appendChild(progressBar);
+    
+    // Add all elements to the overlay
+    overlay.appendChild(logo);
+    overlay.appendChild(text);
+    overlay.appendChild(progressContainer);
+    document.body.appendChild(overlay);
+    
+    // Animate progress bar
+    let width = 0;
+    const interval = setInterval(() => {
+      if (width >= 100) {
+        clearInterval(interval);
+        // Open prediction page after animation completes
+        window.open('http://127.0.0.1:5000/heart', '_blank');
+        // Remove overlay with fade-out
+        overlay.classList.add('fade-out');
+        setTimeout(() => document.body.removeChild(overlay), 500);
+      } else {
+        width += 2;
+        progressBar.style.width = width + '%';
+        
+        // Update text based on progress
+        if (width > 25 && width <= 50) {
+          text.innerText = 'Loading AI Models...';
+        } else if (width > 50 && width <= 75) {
+          text.innerText = 'Preparing Health Interface...';
+        } else if (width > 75) {
+          text.innerText = 'Almost Ready...';
+        }
+      }
+    }, 30);
+  };
+
   // Staggered animation entry for service items
   useEffect(() => {
     // Stagger the animation of items with the benefit-item class
@@ -93,7 +148,10 @@ export function ServicesSection() {
               </p>
               
               <div className="flex items-center gap-2 mt-6">
-                <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 relative overflow-hidden group">
+                <Button 
+                  onClick={redirectToPrediction} 
+                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 relative overflow-hidden group"
+                >
                   <span className="relative z-10 flex items-center gap-1">
                     Start Your Assessment
                   </span>

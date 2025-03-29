@@ -337,7 +337,7 @@ export function HeroSection() {
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-3 mb-12 scroll-reveal visible">
             <Button 
-              onClick={redirectToPrediction} 
+              onClick={scrollToServices} 
               className="gap-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 relative overflow-hidden group"
               size="lg"
             >
