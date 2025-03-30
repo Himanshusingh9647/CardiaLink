@@ -3432,24 +3432,42 @@ def combined_results():
 # Add a function to calculate insurance premium
 def calculate_insurance_premium(risk_score):
     """
-    Calculate insurance premium based on the composite risk score:
-    0-50%: Low - ₹24,000-₹36,000
-    51-65%: Medium - ₹42,000-₹68,000
-    66-85%: High - ₹72,000-₹1,10,000
-    86-100%: Critical - ₹1,20,000-₹2,10,000
+    Calculate insurance premium based on the risk score percentage:
+    1-10%: ₹3,000-₹13,000
+    11-20%: ₹13,000-₹23,000
+    21-30%: ₹23,000-₹33,000
+    31-40%: ₹33,000-₹43,000
+    41-50%: ₹43,000-₹53,000
+    51-60%: ₹53,000-₹63,000
+    61-70%: ₹63,000-₹73,000
+    71-80%: ₹73,000-₹83,000
+    81-90%: ₹83,000-₹93,000
+    91-100%: ₹93,000-₹1,03,000
     
     Returns a tuple of (risk_tier, min_premium, max_premium)
     """
     risk_percentage = risk_score * 100
     
-    if risk_percentage <= 50:
-        return "Low", 24000, 36000
-    elif risk_percentage <= 65:
-        return "Medium", 42000, 68000
-    elif risk_percentage <= 85:
-        return "High", 72000, 110000
+    if risk_percentage <= 10:
+        return "Very Low", 3000, 13000
+    elif risk_percentage <= 20:
+        return "Low", 13000, 23000
+    elif risk_percentage <= 30:
+        return "Low-Medium", 23000, 33000
+    elif risk_percentage <= 40:
+        return "Medium", 33000, 43000
+    elif risk_percentage <= 50:
+        return "Medium-High", 43000, 53000
+    elif risk_percentage <= 60:
+        return "High", 53000, 63000
+    elif risk_percentage <= 70:
+        return "High-Risk", 63000, 73000
+    elif risk_percentage <= 80:
+        return "Very High", 73000, 83000
+    elif risk_percentage <= 90:
+        return "Critical", 83000, 93000
     else:
-        return "Critical", 120000, 210000
+        return "Extremely Critical", 93000, 103000
 
 if __name__ == '__main__':
     print("Disease Risk Assessment App is running on http://127.0.0.1:5000/")
