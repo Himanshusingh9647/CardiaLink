@@ -76,11 +76,6 @@ The main application consists of:
 - Detailed health recommendation engine
 - Integration with health tracking devices
 - Expanded disease risk models
-- PDF report generation
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## Contributors
 
