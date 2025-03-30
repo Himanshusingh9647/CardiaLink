@@ -3433,41 +3433,41 @@ def combined_results():
 def calculate_insurance_premium(risk_score):
     """
     Calculate insurance premium based on the risk score percentage:
-    1-10%: ₹3,000-₹13,000
-    11-20%: ₹13,000-₹23,000
-    21-30%: ₹23,000-₹33,000
-    31-40%: ₹33,000-₹43,000
-    41-50%: ₹43,000-₹53,000
-    51-60%: ₹53,000-₹63,000
-    61-70%: ₹63,000-₹73,000
-    71-80%: ₹73,000-₹83,000
-    81-90%: ₹83,000-₹93,000
-    91-100%: ₹93,000-₹1,03,000
+    1-10%: ₹2,000-₹3,000
+    11-20%: ₹3,000-₹5,000
+    21-30%: ₹5,000-₹8,000
+    31-40%: ₹8,000-₹12,000
+    41-50%: ₹12,000-₹17,000
+    51-60%: ₹17,000-₹22,000
+    61-70%: ₹22,000-₹28,000
+    71-80%: ₹28,000-₹35,000
+    81-90%: ₹35,000-₹43,000
+    91-100%: ₹43,000-₹53,000
     
     Returns a tuple of (risk_tier, min_premium, max_premium)
     """
     risk_percentage = risk_score * 100
     
     if risk_percentage <= 10:
-        return "Very Low", 3000, 13000
+        return "Very Low", 2000, 3000
     elif risk_percentage <= 20:
-        return "Low", 13000, 23000
+        return "Low", 3000, 5000
     elif risk_percentage <= 30:
-        return "Low-Medium", 23000, 33000
+        return "Low-Medium", 5000, 8000
     elif risk_percentage <= 40:
-        return "Medium", 33000, 43000
+        return "Medium", 8000, 12000
     elif risk_percentage <= 50:
-        return "Medium-High", 43000, 53000
+        return "Medium-High", 12000, 17000
     elif risk_percentage <= 60:
-        return "High", 53000, 63000
+        return "High", 17000, 22000
     elif risk_percentage <= 70:
-        return "High-Risk", 63000, 73000
+        return "High-Risk", 22000, 28000
     elif risk_percentage <= 80:
-        return "Very High", 73000, 83000
+        return "Very High", 28000, 35000
     elif risk_percentage <= 90:
-        return "Critical", 83000, 93000
+        return "Critical", 35000, 43000
     else:
-        return "Extremely Critical", 93000, 103000
+        return "Extremely Critical", 43000, 53000
 
 if __name__ == '__main__':
     print("Disease Risk Assessment App is running on http://127.0.0.1:5000/")
