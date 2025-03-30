@@ -1,0 +1,13 @@
+{
+  "include": [
+    "src"
+  ],
+  "venvPath": ".",
+  "venv": "venv",
+  "reportMissingImports": false,
+  "reportMissingTypeStubs": false,
+  "pythonVersion": "3.11",
+  "typeCheckingMode": "basic",
+  "useLibraryCodeForTypes": true,
+  "stubPath": "typings"
+} 
