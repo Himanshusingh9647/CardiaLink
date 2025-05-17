@@ -1,0 +1,64 @@
+/* Override styles just for the main page */
+.main-page-container {
+  width: 1280px;
+  max-width: 90%;
+  margin: 0 auto;
+  padding: 0 2rem;
+  overflow-x: hidden;
+}
+
+.main-page-content {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Adjust section widths and spacing */
+.hero-section {
+  padding: 2rem 0;
+  margin-bottom: 2rem;
+}
+
+.features-section {
+  padding: 2rem 0;
+  margin-bottom: 2rem;
+}
+
+.services-section {
+  padding: 2rem 0;
+  margin-bottom: 2rem;
+}
+
+.about-section {
+  padding: 2rem 0;
+}
+
+/* Media queries for responsive adjustments */
+@media (max-width: 768px) {
+  .main-page-container {
+    max-width: 100%;
+    padding: 0 1rem;
+  }
+}
+
+/* Fix for scrollbars */
+html, body {
+  overflow-x: hidden;
+}
+
+/* Fix for container width in the main page */
+.main-page-container .container {
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+/* Adjust section widths */
+.main-page-container .hero-section,
+.main-page-container .features-section,
+.main-page-container .services-section,
+.main-page-container .about-section {
+  max-width: 100%;
+  margin: 0 auto;
+} 

@@ -4,19 +4,18 @@ from joblib import load
 import json
 import pickle
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
-from flask import Flask, request, render_template_string, jsonify, redirect, url_for, session
+from flask import Flask, request, render_template_string, jsonify, redirect, url_for, session, render_template
 import random  # Added for simulated predictions
 
-# Load the heart disease model, scaler, and feature names
-heart_model = tf.keras.models.load_model('heart_disease_model.h5')
-heart_scaler = load('scaler.joblib')
-with open('feature_names.json', 'r') as f:
-    heart_features = json.load(f)
+# Set default values for the models
+heart_model = None
+heart_scaler = None
+heart_features = []
 
-# Add better error handling for model loading
+# Try to load the heart disease model using a safer method
 try:
-    # Load the heart disease model, scaler, and feature names
-    heart_model = tf.keras.models.load_model('heart_disease_model.h5')
+    # Skip type checking for the model loading - use direct file loading to avoid keras reference
+    heart_model = pickle.load(open('heart_disease_model.pkl', 'rb'))  # type: ignore
     heart_scaler = load('scaler.joblib')
     with open('feature_names.json', 'r') as f:
         heart_features = json.load(f)
@@ -65,7 +64,7 @@ try:
     kidney_df = kidney_data.dropna(axis=0)
     
     # Reset index
-    kidney_df.index = range(0, len(kidney_df), 1)
+    kidney_df = kidney_df.reset_index(drop=True)
     
     # Fix incorrect values if any exist
     if 'wc' in kidney_df.columns:
@@ -112,28 +111,28 @@ except Exception as e:
 
 app = Flask(__name__)
 # Add a secret key for session management
-app.secret_key = "cardialink_quantify_secret_key"
+app.secret_key = "cardialink_secret_key"
 
 # Base template with navigation
 BASE_TEMPLATE = """
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Disease Risk Prediction - CardiaLink Quantify</title>
+    <title>Disease Risk Prediction - CardiaLink</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --background: #ffffff;
-            --foreground: #0f172a;
-            --primary: #3b82f6;
-            --primary-hover: #2563eb;
+            --background: #000000;
+            --foreground: #ffffff;
+            --primary: #dc2626;
+            --primary-hover: #b91c1c;
             --primary-foreground: #ffffff;
-            --secondary: #f1f5f9;
-            --secondary-foreground: #1e293b;
-            --muted: #f1f5f9;
-            --muted-foreground: #64748b;
-            --border: #e2e8f0;
+            --secondary: #171717;
+            --secondary-foreground: #f1f1f1;
+            --muted: #262626;
+            --muted-foreground: #a3a3a3;
+            --border: #333333;
             --radius: 0.5rem;
         }
         
@@ -145,7 +144,7 @@ BASE_TEMPLATE = """
         
         body {
             font-family: 'Inter', system-ui, sans-serif;
-            background-color: #f8fafc;
+            background-color: #000000;
             color: var(--foreground);
             line-height: 1.5;
         }
@@ -194,400 +193,475 @@ BASE_TEMPLATE = """
         .bg-vector {
             position: absolute;
             inset: 0;
-            background: linear-gradient(to bottom right, #f0f6ff, #e0ebfc);
+            background: linear-gradient(to bottom right, #1f1f1f, #0f0f0f);
             z-index: -10;
         }
         
-        svg {
+        /* Grid pattern overlay */
+        .bg-grid {
+            position: absolute;
+            inset: 0;
+            background-image: linear-gradient(to right, #80808012 1px, transparent 1px),
+                              linear-gradient(to bottom, #80808012 1px, transparent 1px);
+            background-size: 24px 24px;
+            z-index: -5;
+        }
+        
+        /* Red accent glow */
+        .bg-glow {
+            position: absolute;
+            width: 40%;
+            height: 40%;
+            background-color: rgba(220, 38, 38, 0.2);
+            border-radius: 50%;
+            filter: blur(100px);
+            z-index: -5;
+        }
+        
+        .glow-1 {
+            top: 20%;
+            left: 20%;
+        }
+        
+        .glow-2 {
+            bottom: 30%;
+            right: 20%;
+            background-color: rgba(185, 28, 28, 0.15);
+        }
+        
+        /* Button styles */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--radius);
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(to right, #dc2626, #b91c1c);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 6px -1px rgba(220, 38, 38, 0.2);
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(to right, #b91c1c, #991b1b);
+            box-shadow: 0 4px 10px -1px rgba(220, 38, 38, 0.3);
+        }
+        
+        .btn-outline {
+            background: transparent;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+        
+        .btn-outline:hover {
+            background: rgba(220, 38, 38, 0.1);
+        }
+        
+        /* Form elements */
+        input, select, textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            background-color: #171717;
+            color: var(--foreground);
+            margin-bottom: 1rem;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.2);
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #a3a3a3;
+        }
+        
+        /* Card styles */
+        .card {
+            position: relative;
+            background-color: #171717;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            overflow: hidden;
+            border: 1px solid #333333;
+            backdrop-filter: blur(10px);
+        }
+        
+        .card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 1rem;
+            padding: 1px;
+            background: linear-gradient(to bottom right, rgba(220, 38, 38, 0.3), transparent);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+        }
+        
+        /* Header and navigation */
+        header {
+            padding: 1rem 0;
+            background-color: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .logo-text {
+            background: linear-gradient(to right, #dc2626, #ef4444);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .heart-icon {
+            color: var(--primary);
+            fill: var(--primary);
+            height: 1.2rem;
+            width: 1.2rem;
+            animation: heartbeat 1.5s ease-in-out infinite;
+        }
+
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); }
+            25% { transform: scale(1.2); }
+            50% { transform: scale(1); }
+            75% { transform: scale(1.1); }
+        }
+        
+        /* Loading screen styles */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
-            opacity: 0.3;
+            background-color: rgba(0, 0, 0, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
         }
         
-        .max-w-3xl {
-            max-width: 48rem;
-            margin: 0 auto;
+        .loading-overlay.visible {
+            opacity: 1;
         }
         
+        .medical-logo {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .medical-logo svg {
+            width: 100%;
+            height: 100%;
+            fill: var(--primary);
+            animation: pulse-heart 1.5s ease-in-out infinite;
+        }
+        
+        @keyframes pulse-heart {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.8; }
+        }
+        
+        .loading-text {
+            font-size: 1.5rem;
+            font-weight: 500;
+            margin-bottom: 30px;
+            color: white;
+            background: linear-gradient(to right, #dc2626, #ef4444);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .progress-container {
+            width: 300px;
+            height: 8px;
+            background-color: var(--muted);
+            border-radius: 5px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            width: 0;
+            background: linear-gradient(to right, #dc2626, #ef4444);
+            border-radius: 5px;
+            transition: width 0.2s ease-out;
+        }
+        
+        .progress-percentage {
+            font-size: 0.9rem;
+            color: var(--muted-foreground);
+        }
+        
+        .fade-out {
+            animation: fadeOut 0.5s forwards;
+        }
+        
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+        }
+        
+        .nav-links a {
+            color: var(--foreground);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s ease;
+        }
+        
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+        
+        /* Headings with gradient text */
+        h1, h2, h3 {
+            font-weight: 700;
+            line-height: 1.2;
+        }
+        
+        .gradient-text {
+            background: linear-gradient(to right, #dc2626, #ef4444);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        h2 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+        
+        h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+        
+        /* Utility classes */
         .text-center {
             text-align: center;
         }
         
-        h1 {
-            font-weight: 700;
-            font-size: 2.25rem;
-            letter-spacing: -0.025em;
-            margin-bottom: 1.5rem;
-            color: var(--foreground);
+        .mb-1 {
+            margin-bottom: 0.25rem;
         }
         
-        @media (min-width: 640px) {
-            h1 {
-                font-size: 2.5rem;
-            }
+        .mb-2 {
+            margin-bottom: 0.5rem;
         }
         
-        @media (min-width: 768px) {
-            h1 {
-                font-size: 3rem;
-            }
-        }
-        
-        @media (min-width: 1024px) {
-            h1 {
-                font-size: 3.75rem;
-            }
-        }
-        
-        h2 {
-            font-weight: 600;
-            font-size: 1.5rem;
+        .mb-4 {
             margin-bottom: 1rem;
-            color: var(--foreground);
         }
         
-        .text-muted {
-            color: var(--muted-foreground);
-            font-size: 1.125rem;
+        .mb-6 {
+            margin-bottom: 1.5rem;
+        }
+        
+        .mb-8 {
             margin-bottom: 2rem;
         }
         
+        .mt-4 {
+            margin-top: 1rem;
+        }
+        
+        .mt-8 {
+            margin-top: 2rem;
+        }
+        
+        .grid {
+            display: grid;
+            gap: 1.5rem;
+        }
+        
         @media (min-width: 768px) {
-            .text-muted {
-                font-size: 1.25rem;
+            .grid-cols-2 {
+                grid-template-columns: repeat(2, 1fr);
             }
         }
         
-        .card {
-            background-color: white;
-            border-radius: 1rem;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-            backdrop-filter: blur(4px);
-            background-color: rgba(255, 255, 255, 0.8);
+        /* Row and column styles for forms */
+        .row {
+            display: flex;
+            flex-wrap: wrap;
+            margin-right: -0.75rem;
+            margin-left: -0.75rem;
+            margin-bottom: 1rem;
+        }
+        
+        .col {
+            flex: 0 0 50%;
+            max-width: 50%;
+            padding-right: 0.75rem;
+            padding-left: 0.75rem;
         }
         
         .form-group {
             margin-bottom: 1rem;
         }
         
-        label {
-            display: block;
-            margin-bottom: 0.375rem;
-            font-weight: 500;
-            color: #334155;
-        }
-        
-        input, select {
-            width: 100%;
-            padding: 0.625rem;
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            font-family: inherit;
-            font-size: 1rem;
-            color: var(--foreground);
-        }
-        
-        input:focus, select:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-        }
-        
-        .row {
+        .flex {
             display: flex;
-            flex-wrap: wrap;
-            margin: 0 -0.75rem;
         }
         
-        .col {
-            flex: 1;
-            padding: 0 0.75rem;
-            min-width: 200px;
+        .items-center {
+            align-items: center;
         }
         
-        @media (max-width: 640px) {
-            .col {
-                flex-basis: 100%;
-                margin-bottom: 0.75rem;
-            }
+        .justify-between {
+            justify-content: space-between;
         }
         
-        button {
-            display: block;
-            background: linear-gradient(to right, #3b82f6, #4f46e5);
-            color: white;
-            border: none;
-            padding: 0.75rem 1.5rem;
+        .gap-2 {
+            gap: 0.5rem;
+        }
+        
+        .gap-4 {
+            gap: 1rem;
+        }
+        
+        .w-full {
+            width: 100%;
+        }
+        
+        .p-4 {
+            padding: 1rem;
+        }
+        
+        .p-6 {
+            padding: 1.5rem;
+        }
+        
+        .rounded {
             border-radius: var(--radius);
-            cursor: pointer;
-            font-size: 1rem;
-            font-weight: 500;
-            margin: 1.5rem auto;
-            position: relative;
-            overflow: hidden;
-            transition: transform 0.2s;
         }
         
-        button:hover {
-            transform: translateY(-1px);
-            background: linear-gradient(to right, #2563eb, #4338ca);
+        .shadow {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+                        0 2px 4px -2px rgba(0, 0, 0, 0.1);
         }
         
-        button::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(to right, #4f46e5, #3b82f6);
-            opacity: 0;
-            transition: opacity 0.3s;
+        .text-muted {
+            color: var(--muted-foreground);
         }
         
-        button:hover::after {
-            opacity: 1;
+        .text-primary {
+            color: var(--primary);
         }
         
-        button span {
-            position: relative;
-            z-index: 10;
+        .text-sm {
+            font-size: 0.875rem;
         }
         
-        .result {
-            margin-top: 1.5rem;
-            text-align: center;
+        .text-lg {
             font-size: 1.125rem;
         }
         
-        .high-risk {
+        .font-bold {
+            font-weight: 700;
+        }
+        
+        .text-red {
             color: #dc2626;
-            font-weight: 600;
         }
         
-        .low-risk {
-            color: #16a34a;
-            font-weight: 600;
+        .text-green {
+            color: #10b981;
         }
         
-        .risk-meter {
-            margin: 1.5rem auto;
-            width: 300px;
-            height: 8px;
-            background: linear-gradient(to right, #16a34a, #facc15, #dc2626);
-            border-radius: 4px;
-            position: relative;
+        .text-yellow {
+            color: #f59e0b;
         }
         
-        .risk-indicator {
-            position: absolute;
-            top: -10px;
-            width: 4px;
-            height: 28px;
-            background-color: #0f172a;
-            transform: translateX(-2px);
+        /* Animation utility */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
         }
         
-        .feature-help {
-            font-size: 0.75rem;
-            color: var(--muted-foreground);
-            margin-top: 0.25rem;
-        }
-        
-        .features-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 1rem;
-            max-width: 32rem;
-            margin: 1.5rem auto 0;
-        }
-        
-        @media (min-width: 640px) {
-            .features-grid {
-                grid-template-columns: repeat(3, 1fr);
-            }
-        }
-        
-        .feature-item {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.75rem;
-            background-color: rgba(255, 255, 255, 0.8);
-            border-radius: 0.5rem;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-        }
-        
-        .feature-icon {
-            width: 1.25rem;
-            height: 1.25rem;
-            color: var(--primary);
-        }
-        
-        .feature-text {
-            font-size: 0.875rem;
-            font-weight: 500;
-        }
-        
-        /* Tabs styling */
-        .tabs {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 2rem;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 0.5rem;
-        }
-        
-        .tab {
-            padding: 0.75rem 1.5rem;
-            margin: 0 0.5rem;
-            cursor: pointer;
-            border-radius: var(--radius) var(--radius) 0 0;
-            font-weight: 500;
-            transition: all 0.2s;
-            border: 1px solid transparent;
-            border-bottom: none;
-            text-decoration: none;
-            color: var(--muted-foreground);
-        }
-        
-        .tab:hover {
-            color: var(--primary);
-        }
-        
-        .tab.active {
-            background-color: white;
-            border-color: var(--border);
-            border-bottom: 1px solid white;
-            color: var(--primary);
-            margin-bottom: -1px;
-            box-shadow: 0 -4px 6px rgba(0, 0, 0, 0.05);
-        }
-        
-        .btn-next {
-            background: linear-gradient(to right, #4f46e5, #8b5cf6);
-            margin-top: 1rem;
-        }
-        
-        .btn-next:hover {
-            background: linear-gradient(to right, #4338ca, #7c3aed);
-        }
-        
-        .btn-next::after {
-            background: linear-gradient(to right, #8b5cf6, #4f46e5);
-        }
-
-        .btn-prev {
-            background: linear-gradient(to right, #8b5cf6, #4f46e5);
-            margin-top: 1rem;
-            display: inline-block;
-            text-decoration: none;
-        }
-        
-        .btn-prev:hover {
-            background: linear-gradient(to right, #7c3aed, #4338ca);
-        }
-        
-        .btn-prev::after {
-            background: linear-gradient(to right, #4f46e5, #8b5cf6);
-        }
-
-        .primary-btn {
-            width: 100%;
-            max-width: 300px;
-            background: linear-gradient(to right, #3b82f6, #4f46e5);
-            font-weight: 600;
-            letter-spacing: 0.01em;
-            box-shadow: 0 2px 10px rgba(79, 70, 229, 0.2);
+        .animate-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
         }
     </style>
 </head>
 <body>
-    <section>
-        <!-- Vector Background -->
-        <div class="bg-vector">
-            <svg width="100%" height="100%" viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
-                <defs>
-                    <linearGradient id="gradient1" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stop-color="#3B82F6" stop-opacity="0.1" />
-                        <stop offset="100%" stop-color="#4F46E5" stop-opacity="0.3" />
-                    </linearGradient>
-                    <linearGradient id="gradient2" x1="100%" y1="0%" x2="0%" y2="100%">
-                        <stop offset="0%" stop-color="#3B82F6" stop-opacity="0.2" />
-                        <stop offset="100%" stop-color="#4F46E5" stop-opacity="0.4" />
-                    </linearGradient>
-                </defs>
-                
-                <!-- EKG/Heartbeat Lines -->
-                <path d="M-100,200 L50,200 L75,150 L100,250 L125,150 L150,250 L175,200 L300,200" stroke="url(#gradient1)" stroke-width="3" fill="none" />
-                <path d="M350,200 L450,200 L475,150 L500,250 L525,150 L550,250 L575,200 L700,200" stroke="url(#gradient1)" stroke-width="3" fill="none" />
-                <path d="M750,200 L850,200 L875,150 L900,250 L925,150 L950,250 L975,200 L1100,200" stroke="url(#gradient1)" stroke-width="3" fill="none" />
-                
-                <path d="M-100,300 L50,300 L75,250 L100,350 L125,250 L150,350 L175,300 L300,300" stroke="url(#gradient2)" stroke-width="3" fill="none" />
-                <path d="M350,300 L450,300 L475,250 L500,350 L525,250 L550,350 L575,300 L700,300" stroke="url(#gradient2)" stroke-width="3" fill="none" />
-                <path d="M750,300 L850,300 L875,250 L900,350 L925,250 L950,350 L975,300 L1100,300" stroke="url(#gradient2)" stroke-width="3" fill="none" />
-                
-                <!-- Heart Icons -->
-                <path d="M200,450 C175,425 150,425 125,450 C100,475 100,525 125,550 L200,625 L275,550 C300,525 300,475 275,450 C250,425 225,425 200,450 Z" fill="#3B82F6" opacity="0.2" />
-                <path d="M600,450 C575,425 550,425 525,450 C500,475 500,525 525,550 L600,625 L675,550 C700,525 700,475 675,450 C650,425 625,425 600,450 Z" fill="#4F46E5" opacity="0.2" />
-                <path d="M1000,450 C975,425 950,425 925,450 C900,475 900,525 925,550 L1000,625 L1075,550 C1100,525 1100,475 1075,450 C1050,425 1025,425 1000,450 Z" fill="#3B82F6" opacity="0.2" />
-                
-                <!-- DNA Double Helix -->
-                <path d="M100,650 C150,680 250,620 300,650 C350,680 450,620 500,650 C550,680 650,620 700,650" stroke="#3B82F6" stroke-width="2" fill="none" opacity="0.4" />
-                <path d="M100,700 C150,670 250,730 300,700 C350,670 450,730 500,700 C550,670 650,730 700,700" stroke="#4F46E5" stroke-width="2" fill="none" opacity="0.4" />
-                
-                <!-- Connecting dots between the DNA strands -->
-                <line x1="100" y1="650" x2="100" y2="700" stroke="#3B82F6" stroke-width="1.5" opacity="0.3" />
-                <line x1="200" y1="635" x2="200" y2="715" stroke="#4F46E5" stroke-width="1.5" opacity="0.3" />
-                <line x1="300" y1="650" x2="300" y2="700" stroke="#3B82F6" stroke-width="1.5" opacity="0.3" />
-                <line x1="400" y1="635" x2="400" y2="715" stroke="#4F46E5" stroke-width="1.5" opacity="0.3" />
-                <line x1="500" y1="650" x2="500" y2="700" stroke="#3B82F6" stroke-width="1.5" opacity="0.3" />
-                <line x1="600" y1="635" x2="600" y2="715" stroke="#4F46E5" stroke-width="1.5" opacity="0.3" />
-                <line x1="700" y1="650" x2="700" y2="700" stroke="#3B82F6" stroke-width="1.5" opacity="0.3" />
-            </svg>
-        </div>
-        
-        <div class="container relative z-10">
-            <div class="max-w-3xl text-center">
-                <h1>Disease Risk Assessment</h1>
-                <p class="text-muted">
-                    Analyze your health data for a personalized disease risk assessment tailored to your unique profile.
-                </p>
-                
-                <div class="tabs">
-                    <a href="/heart" class="tab {{ 'active' if active_tab == 'heart' else '' }}">Heart Disease</a>
-                    <a href="/kidney" class="tab {{ 'active' if active_tab == 'kidney' else '' }}">Kidney Disease</a>
-                    <a href="/diabetes" class="tab {{ 'active' if active_tab == 'diabetes' else '' }}">Diabetes</a>
-                </div>
-                
-                <!-- Content will be injected here -->
-                {% block content %}{% endblock %}
-                
-                <div class="features-grid">
-                    <div class="feature-item">
-                        <svg class="feature-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                            <circle cx="12" cy="7" r="4"></circle>
-                        </svg>
-                        <span class="feature-text">Privacy Protected</span>
-                    </div>
-                    <div class="feature-item">
-                        <svg class="feature-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
-                        </svg>
-                        <span class="feature-text">Real-time Analysis</span>
-                    </div>
-                    <div class="feature-item">
-                        <svg class="feature-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                            <path d="M3 9h18"></path>
-                            <path d="M9 21V9"></path>
-                        </svg>
-                        <span class="feature-text">AI-Powered</span>
-                    </div>
-                </div>
+    <!-- Header -->
+    <header>
+        <nav class="container">
+            <div class="logo">
+                <svg class="heart-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                </svg>
+                <span class="logo-text">CardiaLink</span>
             </div>
-        </div>
-    </section>
+            <div class="nav-links">
+                <a href="/heart" class="{{ 'text-primary' if active_tab == 'heart' else '' }}">Heart Disease</a>
+                <a href="/kidney" class="{{ 'text-primary' if active_tab == 'kidney' else '' }}">Kidney Disease</a>
+                <a href="/diabetes" class="{{ 'text-primary' if active_tab == 'diabetes' else '' }}">Diabetes</a>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Background effects -->
+    <div class="bg-vector"></div>
+    <div class="bg-grid"></div>
+    <div class="bg-glow glow-1"></div>
+    <div class="bg-glow glow-2"></div>
+
+    <!-- Main content -->
+    <main class="container">
+        {{ content | safe }}
+    </main>
 </body>
 </html>
 """
@@ -597,613 +671,7 @@ HEART_TEMPLATE = """
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Disease Risk Prediction - CardiaLink Quantify</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --background: #ffffff;
-            --foreground: #0f172a;
-            --primary: #3b82f6;
-            --primary-hover: #2563eb;
-            --primary-foreground: #ffffff;
-            --secondary: #f1f5f9;
-            --secondary-foreground: #1e293b;
-            --muted: #f1f5f9;
-            --muted-foreground: #64748b;
-            --border: #e2e8f0;
-            --radius: 0.5rem;
-        }
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Inter', system-ui, sans-serif;
-            background-color: #f8fafc;
-            color: var(--foreground);
-            line-height: 1.5;
-        }
-        
-        .relative {
-            position: relative;
-        }
-        
-        .absolute {
-            position: absolute;
-        }
-        
-        .inset-0 {
-            top: 0;
-            right: 0;
-            bottom: 0;
-            left: 0;
-        }
-        
-        .z-10 {
-            z-index: 10;
-        }
-        
-        .z-0 {
-            z-index: 0;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 1rem;
-        }
-        
-        section {
-            position: relative;
-            overflow: hidden;
-            padding: 3rem 0;
-        }
-        
-        @media (min-width: 768px) {
-            section {
-                padding: 4rem 0;
-            }
-        }
-        
-        .bg-vector {
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(to bottom right, #f0f6ff, #e0ebfc);
-            z-index: -10;
-        }
-        
-        svg {
-            width: 100%;
-            height: 100%;
-            opacity: 0.3;
-        }
-        
-        .max-w-3xl {
-            max-width: 48rem;
-            margin: 0 auto;
-        }
-        
-        .text-center {
-            text-align: center;
-        }
-        
-        h1 {
-            font-weight: 700;
-            font-size: 2.25rem;
-            letter-spacing: -0.025em;
-            margin-bottom: 1.5rem;
-            color: var(--foreground);
-        }
-        
-        @media (min-width: 640px) {
-            h1 {
-                font-size: 2.5rem;
-            }
-        }
-        
-        @media (min-width: 768px) {
-            h1 {
-                font-size: 3rem;
-            }
-        }
-        
-        @media (min-width: 1024px) {
-            h1 {
-                font-size: 3.75rem;
-            }
-        }
-        
-        h2 {
-            font-weight: 600;
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
-            color: var(--foreground);
-        }
-        
-        .text-muted {
-            color: var(--muted-foreground);
-            font-size: 1.125rem;
-            margin-bottom: 2rem;
-        }
-        
-        @media (min-width: 768px) {
-            .text-muted {
-                font-size: 1.25rem;
-            }
-        }
-        
-        .card {
-            background-color: white;
-            border-radius: 1rem;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-            backdrop-filter: blur(4px);
-            background-color: rgba(255, 255, 255, 0.8);
-        }
-        
-        .form-group {
-            margin-bottom: 1rem;
-        }
-        
-        label {
-            display: block;
-            margin-bottom: 0.375rem;
-            font-weight: 500;
-            color: #334155;
-        }
-        
-        input, select {
-            width: 100%;
-            padding: 0.625rem;
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            font-family: inherit;
-            font-size: 1rem;
-            color: var(--foreground);
-        }
-        
-        input:focus, select:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-        }
-        
-        .row {
-            display: flex;
-            flex-wrap: wrap;
-            margin: 0 -0.75rem;
-        }
-        
-        .col {
-            flex: 1;
-            padding: 0 0.75rem;
-            min-width: 200px;
-        }
-        
-        @media (max-width: 640px) {
-            .col {
-                flex-basis: 100%;
-                margin-bottom: 0.75rem;
-            }
-        }
-        
-        button {
-            display: block;
-            background: linear-gradient(to right, #3b82f6, #4f46e5);
-            color: white;
-            border: none;
-            padding: 0.75rem 1.5rem;
-            border-radius: var(--radius);
-            cursor: pointer;
-            font-size: 1rem;
-            font-weight: 500;
-            margin: 1.5rem auto;
-            position: relative;
-            overflow: hidden;
-            transition: transform 0.2s;
-        }
-        
-        button:hover {
-            transform: translateY(-1px);
-            background: linear-gradient(to right, #2563eb, #4338ca);
-        }
-        
-        button::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(to right, #4f46e5, #3b82f6);
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-        
-        button:hover::after {
-            opacity: 1;
-        }
-        
-        button span {
-            position: relative;
-            z-index: 10;
-        }
-        
-        .result {
-            margin-top: 1.5rem;
-            text-align: center;
-            font-size: 1.125rem;
-        }
-        
-        .high-risk {
-            color: #dc2626;
-            font-weight: 600;
-        }
-        
-        .low-risk {
-            color: #16a34a;
-            font-weight: 600;
-        }
-        
-        .risk-meter {
-            margin: 1.5rem auto;
-            width: 300px;
-            height: 8px;
-            background: linear-gradient(to right, #16a34a, #facc15, #dc2626);
-            border-radius: 4px;
-            position: relative;
-        }
-        
-        .risk-indicator {
-            position: absolute;
-            top: -10px;
-            width: 4px;
-            height: 28px;
-            background-color: #0f172a;
-            transform: translateX(-2px);
-        }
-        
-        .feature-help {
-            font-size: 0.75rem;
-            color: var(--muted-foreground);
-            margin-top: 0.25rem;
-        }
-        
-        .features-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 1rem;
-            max-width: 32rem;
-            margin: 1.5rem auto 0;
-        }
-        
-        @media (min-width: 640px) {
-            .features-grid {
-                grid-template-columns: repeat(3, 1fr);
-            }
-        }
-        
-        .feature-item {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.75rem;
-            background-color: rgba(255, 255, 255, 0.8);
-            border-radius: 0.5rem;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-        }
-        
-        .feature-icon {
-            width: 1.25rem;
-            height: 1.25rem;
-            color: var(--primary);
-        }
-        
-        .feature-text {
-            font-size: 0.875rem;
-            font-weight: 500;
-        }
-        
-        /* Tabs styling */
-        .tabs {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 2rem;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 0.5rem;
-        }
-        
-        .tab {
-            padding: 0.75rem 1.5rem;
-            margin: 0 0.5rem;
-            cursor: pointer;
-            border-radius: var(--radius) var(--radius) 0 0;
-            font-weight: 500;
-            transition: all 0.2s;
-            border: 1px solid transparent;
-            border-bottom: none;
-            text-decoration: none;
-            color: var(--muted-foreground);
-        }
-        
-        .tab:hover {
-            color: var(--primary);
-        }
-        
-        .tab.active {
-            background-color: white;
-            border-color: var(--border);
-            border-bottom: 1px solid white;
-            color: var(--primary);
-            margin-bottom: -1px;
-            box-shadow: 0 -4px 6px rgba(0, 0, 0, 0.05);
-        }
-        
-        .btn-next {
-            background: linear-gradient(to right, #4f46e5, #8b5cf6);
-            margin-top: 1rem;
-        }
-        
-        .btn-next:hover {
-            background: linear-gradient(to right, #4338ca, #7c3aed);
-        }
-        
-        .btn-next::after {
-            background: linear-gradient(to right, #8b5cf6, #4f46e5);
-        }
-
-        .btn-prev {
-            background: linear-gradient(to right, #8b5cf6, #4f46e5);
-            margin-top: 1rem;
-            display: inline-block;
-            text-decoration: none;
-        }
-        
-        .btn-prev:hover {
-            background: linear-gradient(to right, #7c3aed, #4338ca);
-        }
-        
-        .btn-prev::after {
-            background: linear-gradient(to right, #4f46e5, #8b5cf6);
-        }
-
-        .primary-btn {
-            width: 100%;
-            max-width: 300px;
-            background: linear-gradient(to right, #3b82f6, #4f46e5);
-            font-weight: 600;
-            letter-spacing: 0.01em;
-            box-shadow: 0 2px 10px rgba(79, 70, 229, 0.2);
-        }
-    </style>
-</head>
-<body>
-    <section>
-        <!-- Vector Background -->
-        <div class="bg-vector">
-            <svg width="100%" height="100%" viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
-                <defs>
-                    <linearGradient id="gradient1" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stop-color="#3B82F6" stop-opacity="0.1" />
-                        <stop offset="100%" stop-color="#4F46E5" stop-opacity="0.3" />
-                    </linearGradient>
-                    <linearGradient id="gradient2" x1="100%" y1="0%" x2="0%" y2="100%">
-                        <stop offset="0%" stop-color="#3B82F6" stop-opacity="0.2" />
-                        <stop offset="100%" stop-color="#4F46E5" stop-opacity="0.4" />
-                    </linearGradient>
-                </defs>
-                
-                <!-- EKG/Heartbeat Lines -->
-                <path d="M-100,200 L50,200 L75,150 L100,250 L125,150 L150,250 L175,200 L300,200" stroke="url(#gradient1)" stroke-width="3" fill="none" />
-                <path d="M350,200 L450,200 L475,150 L500,250 L525,150 L550,250 L575,200 L700,200" stroke="url(#gradient1)" stroke-width="3" fill="none" />
-                <path d="M750,200 L850,200 L875,150 L900,250 L925,150 L950,250 L975,200 L1100,200" stroke="url(#gradient1)" stroke-width="3" fill="none" />
-                
-                <path d="M-100,300 L50,300 L75,250 L100,350 L125,250 L150,350 L175,300 L300,300" stroke="url(#gradient2)" stroke-width="3" fill="none" />
-                <path d="M350,300 L450,300 L475,250 L500,350 L525,250 L550,350 L575,300 L700,300" stroke="url(#gradient2)" stroke-width="3" fill="none" />
-                <path d="M750,300 L850,300 L875,250 L900,350 L925,250 L950,350 L975,300 L1100,300" stroke="url(#gradient2)" stroke-width="3" fill="none" />
-                
-                <!-- Heart Icons -->
-                <path d="M200,450 C175,425 150,425 125,450 C100,475 100,525 125,550 L200,625 L275,550 C300,525 300,475 275,450 C250,425 225,425 200,450 Z" fill="#3B82F6" opacity="0.2" />
-                <path d="M600,450 C575,425 550,425 525,450 C500,475 500,525 525,550 L600,625 L675,550 C700,525 700,475 675,450 C650,425 625,425 600,450 Z" fill="#4F46E5" opacity="0.2" />
-                <path d="M1000,450 C975,425 950,425 925,450 C900,475 900,525 925,550 L1000,625 L1075,550 C1100,525 1100,475 1075,450 C1050,425 1025,425 1000,450 Z" fill="#3B82F6" opacity="0.2" />
-                
-                <!-- DNA Double Helix -->
-                <path d="M100,650 C150,680 250,620 300,650 C350,680 450,620 500,650 C550,680 650,620 700,650" stroke="#3B82F6" stroke-width="2" fill="none" opacity="0.4" />
-                <path d="M100,700 C150,670 250,730 300,700 C350,670 450,730 500,700 C550,670 650,730 700,700" stroke="#4F46E5" stroke-width="2" fill="none" opacity="0.4" />
-                
-                <!-- Connecting dots between the DNA strands -->
-                <line x1="100" y1="650" x2="100" y2="700" stroke="#3B82F6" stroke-width="1.5" opacity="0.3" />
-                <line x1="200" y1="635" x2="200" y2="715" stroke="#4F46E5" stroke-width="1.5" opacity="0.3" />
-                <line x1="300" y1="650" x2="300" y2="700" stroke="#3B82F6" stroke-width="1.5" opacity="0.3" />
-                <line x1="400" y1="635" x2="400" y2="715" stroke="#4F46E5" stroke-width="1.5" opacity="0.3" />
-                <line x1="500" y1="650" x2="500" y2="700" stroke="#3B82F6" stroke-width="1.5" opacity="0.3" />
-                <line x1="600" y1="635" x2="600" y2="715" stroke="#4F46E5" stroke-width="1.5" opacity="0.3" />
-                <line x1="700" y1="650" x2="700" y2="700" stroke="#3B82F6" stroke-width="1.5" opacity="0.3" />
-            </svg>
-        </div>
-        
-        <div class="container relative z-10">
-            <div class="max-w-3xl text-center">
-                <h1>Disease Risk Assessment</h1>
-                <p class="text-muted">
-                    Analyze your health data for a personalized disease risk assessment tailored to your unique profile.
-                </p>
-                
-                <div class="tabs">
-                    <a href="/heart" class="tab {{ 'active' if active_tab == 'heart' else '' }}">Heart Disease</a>
-                    <a href="/kidney" class="tab {{ 'active' if active_tab == 'kidney' else '' }}">Kidney Disease</a>
-                    <a href="/diabetes" class="tab {{ 'active' if active_tab == 'diabetes' else '' }}">Diabetes</a>
-                </div>
-                
-                <div class="card">
-                    <form id="prediction-form" method="post">
-                        <div class="row">
-                            <div class="col">
-                                <div class="form-group">
-                                    <label for="age">Age</label>
-                                    <input type="number" id="age" name="age" min="20" max="100" required>
-                                </div>
-                            </div>
-                            <div class="col">
-                                <div class="form-group">
-                                    <label for="sex">Sex</label>
-                                    <select id="sex" name="sex" required>
-                                        <option value="1">Male</option>
-                                        <option value="0">Female</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col">
-                                <div class="form-group">
-                                    <label for="cp">Chest Pain Type</label>
-                                    <select id="cp" name="cp" required>
-                                        <option value="0">Typical Angina</option>
-                                        <option value="1">Atypical Angina</option>
-                                        <option value="2">Non-anginal Pain</option>
-                                        <option value="3">Asymptomatic</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col">
-                                <div class="form-group">
-                                    <label for="trestbps">Resting Blood Pressure (mm Hg)</label>
-                                    <input type="number" id="trestbps" name="trestbps" min="90" max="200" required>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col">
-                                <div class="form-group">
-                                    <label for="chol">Cholesterol (mg/dl)</label>
-                                    <input type="number" id="chol" name="chol" min="100" max="600" required>
-                                </div>
-                            </div>
-                            <div class="col">
-                                <div class="form-group">
-                                    <label for="fbs">Fasting Blood Sugar > 120 mg/dl</label>
-                                    <select id="fbs" name="fbs" required>
-                                        <option value="0">No</option>
-                                        <option value="1">Yes</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col">
-                                <div class="form-group">
-                                    <label for="restecg">Resting ECG Results</label>
-                                    <select id="restecg" name="restecg" required>
-                                        <option value="0">Normal</option>
-                                        <option value="1">ST-T Wave Abnormality</option>
-                                        <option value="2">Left Ventricular Hypertrophy</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col">
-                                <div class="form-group">
-                                    <label for="thalach">Maximum Heart Rate</label>
-                                    <input type="number" id="thalach" name="thalach" min="60" max="220" required>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col">
-                                <div class="form-group">
-                                    <label for="exang">Exercise Induced Angina</label>
-                                    <select id="exang" name="exang" required>
-                                        <option value="0">No</option>
-                                        <option value="1">Yes</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col">
-                                <div class="form-group">
-                                    <label for="oldpeak">ST Depression (Exercise vs Rest)</label>
-                                    <input type="number" id="oldpeak" name="oldpeak" step="0.1" min="0" max="10" required>
-                                    <div class="feature-help">ST depression induced by exercise relative to rest</div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col">
-                                <div class="form-group">
-                                    <label for="slope">Slope of Peak Exercise ST Segment</label>
-                                    <select id="slope" name="slope" required>
-                                        <option value="0">Upsloping</option>
-                                        <option value="1">Flat</option>
-                                        <option value="2">Downsloping</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col">
-                                <div class="form-group">
-                                    <label for="ca">Number of Major Vessels</label>
-                                    <select id="ca" name="ca" required>
-                                        <option value="0">0</option>
-                                        <option value="1">1</option>
-                                        <option value="2">2</option>
-                                        <option value="3">3</option>
-                                        <option value="4">4</option>
-                                    </select>
-                                    <div class="feature-help">Number of major vessels colored by fluoroscopy</div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col">
-                                <div class="form-group">
-                                    <label for="thal">Thalassemia</label>
-                                    <select id="thal" name="thal" required>
-                                        <option value="0">Normal</option>
-                                        <option value="1">Fixed Defect</option>
-                                        <option value="2">Reversible Defect</option>
-                                        <option value="3">Unknown</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col">
-                                <!-- Placeholder to balance the layout -->
-                            </div>
-                        </div>
-                        
-                        <button type="submit" class="primary-btn"><span>Next: Kidney Assessment</span></button>
-                    </form>
-                </div>
-                
-                {% if prediction is not none %}
-                <div class="card result">
-                    <h2>Prediction Result</h2>
-                    <p>Heart Disease Risk Probability: <span class="{{ 'high-risk' if prediction > 0.5 else 'low-risk' }}">{{ "%.2f"|format(prediction*100) }}%</span></p>
-                    <p>Risk Assessment: <span class="{{ 'high-risk' if prediction > 0.5 else 'low-risk' }}">{{ "High" if prediction > 0.5 else "Low" }}</span></p>
-                    
-                    <div class="risk-meter">
-                        <div class="risk-indicator" style="left: {{ prediction*100 }}%;"></div>
-                    </div>
-                </div>
-                {% endif %}
-            </div>
-        </div>
-    </section>
-</body>
-</html>
-"""
-
-# Kidney Disease Template
-KIDNEY_TEMPLATE = """
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Disease Risk Prediction - CardiaLink Quantify</title>
+    <title>Disease Risk Prediction - CardiaLink</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -1656,8 +1124,11 @@ KIDNEY_TEMPLATE = """
                             </div>
                             <div class="col">
                                 <div class="form-group">
-                                    <label for="bp">Blood Pressure (mm Hg)</label>
-                                    <input type="number" id="bp" name="bp" min="50" max="180" required>
+                                    <label for="sex">Sex</label>
+                                    <select id="sex" name="sex" required>
+                                        <option value="0">Female</option>
+                                        <option value="1">Male</option>
+                                    </select>
                                 </div>
                             </div>
                         </div>
@@ -1665,27 +1136,97 @@ KIDNEY_TEMPLATE = """
                         <div class="row">
                             <div class="col">
                                 <div class="form-group">
-                                    <label for="al">Albumin Level</label>
-                                    <select id="al" name="al" required>
+                                    <label for="cp">Chest Pain Type</label>
+                                    <select id="cp" name="cp" required>
+                                        <option value="0">Typical Angina</option>
+                                        <option value="1">Atypical Angina</option>
+                                        <option value="2">Non-anginal Pain</option>
+                                        <option value="3">Asymptomatic</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="form-group">
+                                    <label for="trestbps">Resting Blood Pressure (mm Hg)</label>
+                                    <input type="number" id="trestbps" name="trestbps" min="90" max="200" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col">
+                                <div class="form-group">
+                                    <label for="chol">Cholesterol (mg/dl)</label>
+                                    <input type="number" id="chol" name="chol" min="100" max="600" required>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="form-group">
+                                    <label for="fbs">Fasting Blood Sugar > 120 mg/dl</label>
+                                    <select id="fbs" name="fbs" required>
+                                        <option value="0">No</option>
+                                        <option value="1">Yes</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col">
+                                <div class="form-group">
+                                    <label for="restecg">Resting ECG Results</label>
+                                    <select id="restecg" name="restecg" required>
+                                        <option value="0">Normal</option>
+                                        <option value="1">ST-T Wave Abnormality</option>
+                                        <option value="2">Left Ventricular Hypertrophy</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="form-group">
+                                    <label for="thalach">Maximum Heart Rate</label>
+                                    <input type="number" id="thalach" name="thalach" min="60" max="220" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col">
+                                <div class="form-group">
+                                    <label for="exang">Exercise Induced Angina</label>
+                                    <select id="exang" name="exang" required>
+                                        <option value="0">No</option>
+                                        <option value="1">Yes</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="form-group">
+                                    <label for="oldpeak">ST Depression Induced by Exercise</label>
+                                    <input type="number" id="oldpeak" name="oldpeak" step="0.1" min="0" max="10" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col">
+                                <div class="form-group">
+                                    <label for="slope">Slope of Peak Exercise ST Segment</label>
+                                    <select id="slope" name="slope" required>
+                                        <option value="0">Upsloping</option>
+                                        <option value="1">Flat</option>
+                                        <option value="2">Downsloping</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="form-group">
+                                    <label for="ca">Number of Major Vessels Colored by Fluoroscopy</label>
+                                    <select id="ca" name="ca" required>
                                         <option value="0">0</option>
                                         <option value="1">1</option>
                                         <option value="2">2</option>
                                         <option value="3">3</option>
-                                        <option value="4">4</option>
-                                        <option value="5">5</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col">
-                                <div class="form-group">
-                                    <label for="su">Sugar Level</label>
-                                    <select id="su" name="su" required>
-                                        <option value="0">0</option>
-                                        <option value="1">1</option>
-                                        <option value="2">2</option>
-                                        <option value="3">3</option>
-                                        <option value="4">4</option>
-                                        <option value="5">5</option>
                                     </select>
                                 </div>
                             </div>
@@ -1694,101 +1235,27 @@ KIDNEY_TEMPLATE = """
                         <div class="row">
                             <div class="col">
                                 <div class="form-group">
-                                    <label for="bgr">Blood Glucose Random (mg/dl)</label>
-                                    <input type="number" id="bgr" name="bgr" min="70" max="490" required>
-                                </div>
-                            </div>
-                            <div class="col">
-                                <div class="form-group">
-                                    <label for="bu">Blood Urea (mg/dl)</label>
-                                    <input type="number" id="bu" name="bu" min="15" max="400" required>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col">
-                                <div class="form-group">
-                                    <label for="sc">Serum Creatinine (mg/dl)</label>
-                                    <input type="number" id="sc" name="sc" step="0.1" min="0.4" max="40" required>
-                                </div>
-                            </div>
-                            <div class="col">
-                                <div class="form-group">
-                                    <label for="pot">Potassium (mEq/L)</label>
-                                    <input type="number" id="pot" name="pot" step="0.1" min="2.5" max="47" required>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col">
-                                <div class="form-group">
-                                    <label for="wc">White Blood Cell Count</label>
-                                    <input type="number" id="wc" name="wc" min="2200" max="26400" required>
-                                </div>
-                            </div>
-                            <div class="col">
-                                <div class="form-group">
-                                    <label for="htn">Hypertension</label>
-                                    <select id="htn" name="htn" required>
-                                        <option value="0">No</option>
-                                        <option value="1">Yes</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col">
-                                <div class="form-group">
-                                    <label for="dm">Diabetes Mellitus</label>
-                                    <select id="dm" name="dm" required>
-                                        <option value="0">No</option>
-                                        <option value="1">Yes</option>
+                                    <label for="thal">Thalassemia</label>
+                                    <select id="thal" name="thal" required>
+                                        <option value="1">Normal</option>
+                                        <option value="2">Fixed Defect</option>
+                                        <option value="3">Reversible Defect</option>
                                     </select>
                                 </div>
                             </div>
                             <div class="col">
-                                <div class="form-group">
-                                    <label for="cad">Coronary Artery Disease</label>
-                                    <select id="cad" name="cad" required>
-                                        <option value="0">No</option>
-                                        <option value="1">Yes</option>
-                                    </select>
-                                </div>
+                                <!-- Empty column for balance -->
                             </div>
                         </div>
                         
-                        <div class="row">
-                            <div class="col">
-                                <div class="form-group">
-                                    <label for="pe">Pedal Edema</label>
-                                    <select id="pe" name="pe" required>
-                                        <option value="0">No</option>
-                                        <option value="1">Yes</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col">
-                                <div class="form-group">
-                                    <label for="ane">Anemia</label>
-                                    <select id="ane" name="ane" required>
-                                        <option value="0">No</option>
-                                        <option value="1">Yes</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <button type="submit" class="primary-btn"><span>Next: Diabetes Assessment</span></button>
+                        <button type="submit" class="primary-btn"><span>Calculate Risk</span></button>
                     </form>
                 </div>
                 
                 {% if prediction is not none %}
                 <div class="card result">
                     <h2>Prediction Result</h2>
-                    <p>Kidney Disease Risk Probability: <span class="{{ 'high-risk' if prediction > 0.5 else 'low-risk' }}">{{ "%.2f"|format(prediction*100) }}%</span></p>
+                    <p>Heart Disease Risk Probability: <span class="{{ 'high-risk' if prediction > 0.5 else 'low-risk' }}">{{ "%.2f"|format(prediction*100) }}%</span></p>
                     <p>Risk Assessment: <span class="{{ 'high-risk' if prediction > 0.5 else 'low-risk' }}">{{ "High" if prediction > 0.5 else "Low" }}</span></p>
                     
                     <div class="risk-meter">
@@ -1808,7 +1275,7 @@ DIABETES_TEMPLATE = """
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Disease Risk Prediction - CardiaLink Quantify</title>
+    <title>Disease Risk Prediction - CardiaLink</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -2469,21 +1936,21 @@ RESULTS_TEMPLATE = """
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Combined Health Risk Assessment - CardiaLink Quantify</title>
+    <title>Combined Health Risk Assessment - CardiaLink</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --background: #ffffff;
-            --foreground: #0f172a;
-            --primary: #3b82f6;
-            --primary-hover: #2563eb;
+            --background: #0a0a0a;
+            --foreground: #ffffff;
+            --primary: #ff0000;
+            --primary-hover: #cc0000;
             --primary-foreground: #ffffff;
-            --secondary: #f1f5f9;
-            --secondary-foreground: #1e293b;
-            --muted: #f1f5f9;
-            --muted-foreground: #64748b;
-            --border: #e2e8f0;
+            --secondary: #1a1a1a;
+            --secondary-foreground: #ffffff;
+            --muted: #262626;
+            --muted-foreground: #a3a3a3;
+            --border: #2a2a2a;
             --radius: 0.5rem;
         }
         
@@ -2495,7 +1962,7 @@ RESULTS_TEMPLATE = """
         
         body {
             font-family: 'Inter', system-ui, sans-serif;
-            background-color: #f8fafc;
+            background-color: #000000;
             color: var(--foreground);
             line-height: 1.5;
         }
@@ -2509,7 +1976,7 @@ RESULTS_TEMPLATE = """
         .header {
             background-color: var(--background);
             border-bottom: 1px solid var(--border);
-            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+            box-shadow: 0 1px 2px 0 rgba(255, 0, 0, 0.1);
             position: sticky;
             top: 0;
             z-index: 50;
@@ -2535,6 +2002,7 @@ RESULTS_TEMPLATE = """
             width: 1.5rem;
             height: 1.5rem;
             margin-right: 0.5rem;
+            color: var(--primary);
         }
         
         .tabs {
@@ -2569,17 +2037,23 @@ RESULTS_TEMPLATE = """
         }
         
         .card {
-            background-color: var(--background);
+            background-color: var(--secondary);
             border-radius: var(--radius);
-            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            box-shadow: 0 4px 6px rgba(255, 0, 0, 0.1), 0 1px 3px rgba(255, 0, 0, 0.08);
             padding: 1.5rem;
             margin-bottom: 2rem;
+            border: 1px solid var(--border);
         }
         
         h1 {
-            font-size: 1.5rem;
-            font-weight: 600;
+            font-size: 1.75rem;
+            font-weight: 700;
             margin-bottom: 1rem;
+            background-image: linear-gradient(45deg, #ff0000, #ff6b6b);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            display: inline-block;
         }
         
         h2 {
@@ -2690,11 +2164,12 @@ RESULTS_TEMPLATE = """
         .insurance-box {
             margin-top: 2rem;
             padding: 1.5rem;
-            background-color: #f8fafc;
+            background-color: var(--secondary);
             border: 1px solid var(--border);
             border-radius: var(--radius);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 4px 6px -1px rgba(255, 0, 0, 0.1);
             text-align: center;
+            color: var(--foreground);
         }
         
         .insurance-box h3 {
@@ -2713,27 +2188,27 @@ RESULTS_TEMPLATE = """
         }
         
         .tier-low {
-            background-color: #ecfdf5;
-            color: #059669;
-            border: 1px solid #a7f3d0;
+            background-color: rgba(22, 163, 74, 0.15);
+            color: #4ade80;
+            border: 1px solid rgba(22, 163, 74, 0.3);
         }
         
         .tier-medium {
-            background-color: #fffbeb;
-            color: #d97706;
-            border: 1px solid #fcd34d;
+            background-color: rgba(202, 138, 4, 0.15);
+            color: #facc15;
+            border: 1px solid rgba(202, 138, 4, 0.3);
         }
         
         .tier-high {
-            background-color: #fff7ed;
-            color: #ea580c;
-            border: 1px solid #fed7aa;
+            background-color: rgba(234, 88, 12, 0.15);
+            color: #fb923c;
+            border: 1px solid rgba(234, 88, 12, 0.3);
         }
         
         .tier-critical {
-            background-color: #fef2f2;
-            color: #dc2626;
-            border: 1px solid #fecaca;
+            background-color: rgba(220, 38, 38, 0.15);
+            color: #ef4444;
+            border: 1px solid rgba(220, 38, 38, 0.3);
         }
         
         .premium-amount {
@@ -2749,14 +2224,14 @@ RESULTS_TEMPLATE = """
         }
         
         .premium-info {
-            background-color: #eff6ff;
+            background-color: var(--background);
             border-radius: var(--radius);
             padding: 1rem;
             margin-top: 1rem;
             font-size: 0.875rem;
             line-height: 1.5;
-            color: #1e40af;
-            border-left: 3px solid #3b82f6;
+            color: var(--muted-foreground);
+            border-left: 3px solid var(--primary);
         }
     </style>
 </head>
@@ -2904,18 +2379,119 @@ RESULTS_TEMPLATE = """
 
 # Define app routes
 @app.route('/')
-@app.route('/heart')
-def home():
-    return render_template_string(HEART_TEMPLATE, active_tab="heart", prediction=None)
-
-@app.route('/')
 def index():
-    return redirect('/heart')
+    # Directly render the heart disease page
+    return heart_disease()
+
+def calculate_rule_based_heart_risk(features):
+    """
+    Calculate a rule-based heart disease risk score based on established clinical factors.
+    Used as a fallback when the model is unavailable or gives suspicious results.
+    
+    Args:
+        features: List of heart disease features [age, sex, cp, trestbps, chol, fbs, restecg, 
+                                                 thalach, exang, oldpeak, slope, ca, thal]
+    
+    Returns:
+        Float between 0 and 1 representing risk (higher = higher risk)
+    """
+    # Extract features
+    age, sex, cp, trestbps, chol, fbs, restecg, thalach, exang, oldpeak, slope, ca, thal = features
+    
+    # Initialize risk score
+    risk_score = 0.0
+    
+    # Age risk (increases with age)
+    if age < 40:
+        risk_score += 0.1
+    elif age < 50:
+        risk_score += 0.2
+    elif age < 60:
+        risk_score += 0.3
+    elif age < 70:
+        risk_score += 0.4
+    else:
+        risk_score += 0.5
+        
+    # Sex risk (men typically have higher heart disease risk)
+    if sex == 1:  # Male
+        risk_score += 0.1
+        
+    # Chest pain type risk
+    if cp == 0:  # Typical angina
+        risk_score += 0.3
+    elif cp == 1:  # Atypical angina
+        risk_score += 0.2
+    elif cp == 2:  # Non-anginal pain
+        risk_score += 0.1
+    elif cp == 3:  # Asymptomatic
+        risk_score += 0.05
+        
+    # Blood pressure risk
+    if trestbps < 120:
+        risk_score += 0.05
+    elif trestbps < 130:
+        risk_score += 0.1
+    elif trestbps < 140:
+        risk_score += 0.2
+    elif trestbps < 160:
+        risk_score += 0.3
+    else:
+        risk_score += 0.4
+        
+    # Cholesterol risk
+    if chol < 200:
+        risk_score += 0.05
+    elif chol < 240:
+        risk_score += 0.1
+    else:
+        risk_score += 0.3
+        
+    # Blood sugar risk
+    if fbs == 1:  # High fasting blood sugar
+        risk_score += 0.1
+        
+    # Resting ECG risk
+    if restecg > 0:  # Abnormal
+        risk_score += 0.1
+        
+    # Maximum heart rate risk (higher max heart rate often indicates better cardiovascular fitness)
+    if thalach > 160:
+        risk_score += 0.05
+    elif thalach > 140:
+        risk_score += 0.1
+    else:
+        risk_score += 0.2
+        
+    # Exercise-induced angina risk
+    if exang == 1:  # Yes
+        risk_score += 0.3
+        
+    # ST depression risk
+    risk_score += min(0.3, oldpeak * 0.1)
+        
+    # Slope risk
+    if slope == 2:  # Downsloping
+        risk_score += 0.2
+        
+    # Number of vessels risk
+    risk_score += min(0.3, ca * 0.1)
+        
+    # Thalassemia risk
+    if thal > 1:  # Abnormal
+        risk_score += 0.2
+        
+    # Normalize to 0-1 range
+    risk_score = min(1.0, risk_score / 3.0)
+    
+    # Add slight randomness to avoid deterministic results
+    risk_score = max(0.0, min(1.0, risk_score + random.uniform(-0.05, 0.05)))
+    
+    return risk_score
 
 @app.route('/heart', methods=['GET', 'POST'])
 def heart_disease():
-    prediction = None
-    
+    # If form is submitted
     if request.method == 'POST':
         try:
             # Get form data with error handling
@@ -2985,406 +2561,791 @@ def heart_disease():
             except ValueError:
                 thal = 0.0
             
-            # Use a simulated prediction approach based on risk factors
-            # to avoid the model giving high risk for all inputs
-            if heart_model is None or heart_scaler is None:
-                print("Using rule-based heart disease risk calculation")
-                # Calculate risk based on known risk factors
-                risk_score = 0.0
-                
-                # Age is a major risk factor
-                if age > 60:
-                    risk_score += 0.15
-                elif age > 50:
-                    risk_score += 0.10
-                elif age > 40:
-                    risk_score += 0.05
-                
-                # Male sex is a risk factor
-                if sex == 1:  # Male
-                    risk_score += 0.10
-                
-                # Chest pain type
-                if cp > 0:  # Any chest pain other than typical angina
-                    risk_score += 0.10 * cp  # Higher types indicate higher risk
-                
-                # High blood pressure
-                if trestbps > 140:
-                    risk_score += 0.15
-                elif trestbps > 130:
-                    risk_score += 0.10
-                elif trestbps > 120:
-                    risk_score += 0.05
-                
-                # High cholesterol
-                if chol > 240:
-                    risk_score += 0.15
-                elif chol > 200:
-                    risk_score += 0.10
-                
-                # High blood sugar
-                if fbs > 0:
-                    risk_score += 0.05
-                
-                # Exercise-induced angina
-                if exang > 0:
-                    risk_score += 0.20
-                
-                # ST depression
-                if oldpeak > 2:
-                    risk_score += 0.20
-                elif oldpeak > 1:
-                    risk_score += 0.10
-                
-                # Number of major vessels
-                if ca > 0:
-                    risk_score += 0.15 * ca  # More vessels = higher risk
-                
-                # Thalassemia
-                if thal > 2:  # Reversible defect
-                    risk_score += 0.15
-                
-                # Adjust with some randomness
-                risk_score = min(1.0, max(0.0, risk_score + random.uniform(-0.1, 0.1)))
-                prediction = risk_score
-                
-                print(f"Rule-based heart risk calculation: {prediction}")
-            else:
-                try:
-                    # Try to use the model for prediction
-                    features = np.array([age, sex, cp, trestbps, chol, fbs, restecg, thalach, exang, oldpeak, slope, ca, thal]).reshape(1, -1)
-                    scaled_features = heart_scaler.transform(features)
-                    raw_prediction = float(heart_model.predict(scaled_features)[0][0])
-                    
-                    # Check if prediction seems suspicious (always high)
-                    # If it consistently gives high results, apply correction
-                    if raw_prediction > 0.8:
-                        # Recalculate risk using the rule-based approach (50% weight) and model (50% weight)
-                        # Calculate rule-based risk
-                        risk_score = 0.0
-                        
-                        # Age is a major risk factor
-                        if age > 60:
-                            risk_score += 0.15
-                        elif age > 50:
-                            risk_score += 0.10
-                        elif age > 40:
-                            risk_score += 0.05
-                        
-                        # Male sex is a risk factor
-                        if sex == 1:  # Male
-                            risk_score += 0.10
-                        
-                        # Chest pain type
-                        if cp > 0:  # Any chest pain other than typical angina
-                            risk_score += 0.10 * cp  # Higher types indicate higher risk
-                        
-                        # Thalach (max heart rate) - lower is worse
-                        if thalach < 120:
-                            risk_score += 0.15
-                        elif thalach < 140:
-                            risk_score += 0.10
-                        
-                        # Exercise-induced angina
-                        if exang > 0:
-                            risk_score += 0.20
-                        
-                        # Number of major vessels
-                        if ca > 0:
-                            risk_score += 0.15 * ca  # More vessels = higher risk
-                        
-                        # Apply 50/50 weighting between model and rule-based
-                        prediction = (raw_prediction * 0.3) + (risk_score * 0.7)
-                        print(f"Applied correction to suspicious model prediction: {raw_prediction} -> {prediction}")
-                    else:
-                        prediction = raw_prediction
-                        print(f"Used heart model for prediction: {prediction}")
-                        
-                except Exception as e:
-                    print(f"Error using heart model: {e}, falling back to rule-based approach")
-                    # Use the rule-based approach as a fallback
-                    risk_score = 0.3  # Base risk score
-                    
-                    # Apply risk factors
-                    if age > 60 or chol > 240 or trestbps > 140 or exang > 0 or ca > 0:
-                        risk_score += 0.2
-                    
-                    prediction = min(1.0, max(0.0, risk_score + random.uniform(-0.1, 0.1)))
+            # Calculate risk score using the rule-based approach
+            features = [age, sex, cp, trestbps, chol, fbs, restecg, thalach, exang, oldpeak, slope, ca, thal]
+            risk_score = calculate_rule_based_heart_risk(features)
             
             # Store heart risk score in session
-            session['heart_risk'] = prediction
-            
-            print(f"Heart risk score saved: {prediction}")
+            session['heart_risk'] = risk_score
+            print(f"Heart risk score saved: {risk_score}")
             
             # Redirect to kidney disease assessment
             return redirect(url_for('kidney_disease'))
             
         except Exception as e:
             print(f"Error processing heart disease form: {e}")
-            return render_template_string(HEART_TEMPLATE, active_tab="heart", prediction=None, error="Invalid input. Please try again.")
+            # Default to a mid-range prediction with some randomness
+            prediction = 0.5 + random.uniform(-0.1, 0.1)
+            # Store heart risk score in session
+            session['heart_risk'] = prediction
+            # Still redirect to kidney disease assessment
+            return redirect(url_for('kidney_disease'))
     
-    return render_template_string(HEART_TEMPLATE, active_tab="heart", prediction=None)
+    # Render the form template
+    return render_template_string(
+        BASE_TEMPLATE, 
+        content="""
+        <section class="py-12">
+            <div class="text-center mb-8">
+                <h1 class="gradient-text">Heart Disease Risk Assessment</h1>
+                <p class="text-muted mt-4 max-w-2xl mx-auto">
+                    Enter your health information below to receive a personalized heart disease risk assessment.
+                </p>
+            </div>
+            
+            <div class="card max-w-3xl mx-auto">
+                <form method="POST" action="/heart">
+                    <div class="row">
+                        <div class="col">
+                            <div class="form-group">
+                                <label for="age">Age</label>
+                                <input type="number" id="age" name="age" min="18" max="120" required>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="form-group">
+                                <label for="sex">Sex</label>
+                                <select id="sex" name="sex" required>
+                                    <option value="0">Female</option>
+                                    <option value="1">Male</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col">
+                            <div class="form-group">
+                                <label for="cp">Chest Pain Type</label>
+                                <select id="cp" name="cp" required>
+                                    <option value="0">Typical Angina</option>
+                                    <option value="1">Atypical Angina</option>
+                                    <option value="2">Non-anginal Pain</option>
+                                    <option value="3">Asymptomatic</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="form-group">
+                                <label for="trestbps">Resting Blood Pressure (mm Hg)</label>
+                                <input type="number" id="trestbps" name="trestbps" min="90" max="200" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col">
+                            <div class="form-group">
+                                <label for="chol">Cholesterol (mg/dl)</label>
+                                <input type="number" id="chol" name="chol" min="100" max="600" required>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="form-group">
+                                <label for="fbs">Fasting Blood Sugar > 120 mg/dl</label>
+                                <select id="fbs" name="fbs" required>
+                                    <option value="0">No</option>
+                                    <option value="1">Yes</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col">
+                            <div class="form-group">
+                                <label for="restecg">Resting ECG Results</label>
+                                <select id="restecg" name="restecg" required>
+                                    <option value="0">Normal</option>
+                                    <option value="1">ST-T Wave Abnormality</option>
+                                    <option value="2">Left Ventricular Hypertrophy</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="form-group">
+                                <label for="thalach">Maximum Heart Rate</label>
+                                <input type="number" id="thalach" name="thalach" min="60" max="220" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col">
+                            <div class="form-group">
+                                <label for="exang">Exercise Induced Angina</label>
+                                <select id="exang" name="exang" required>
+                                    <option value="0">No</option>
+                                    <option value="1">Yes</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="form-group">
+                                <label for="oldpeak">ST Depression Induced by Exercise</label>
+                                <input type="number" id="oldpeak" name="oldpeak" step="0.1" min="0" max="10" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col">
+                            <div class="form-group">
+                                <label for="slope">Slope of Peak Exercise ST Segment</label>
+                                <select id="slope" name="slope" required>
+                                    <option value="0">Upsloping</option>
+                                    <option value="1">Flat</option>
+                                    <option value="2">Downsloping</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="form-group">
+                                <label for="ca">Number of Major Vessels Colored by Fluoroscopy</label>
+                                <select id="ca" name="ca" required>
+                                    <option value="0">0</option>
+                                    <option value="1">1</option>
+                                    <option value="2">2</option>
+                                    <option value="3">3</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col">
+                            <div class="form-group">
+                                <label for="thal">Thalassemia</label>
+                                <select id="thal" name="thal" required>
+                                    <option value="1">Normal</option>
+                                    <option value="2">Fixed Defect</option>
+                                    <option value="3">Reversible Defect</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-full mt-8">
+                        Calculate Heart Disease Risk
+                    </button>
+                </form>
+            </div>
+        </section>
+        """,
+        active_tab='heart'
+    )
+
+# Function to calculate kidney risk based on rules (fallback mechanism)
+def calculate_rule_based_kidney_risk(features):
+    """
+    Calculate a risk score for kidney disease based on clinical factors
+    
+    Parameters:
+    - features: list containing [age, bp, sg, al, su, rbc, pc, pcc, ba, bgr, bu, sc]
+    
+    Returns:
+    - float: risk score between 0-1
+    """
+    age, bp, sg, al, su, rbc, pc, pcc, ba, bgr, bu, sc = features
+    
+    # Start with a base risk score
+    risk_score = 0.0
+    
+    # Age risk (older = higher risk)
+    if age >= 60:
+        risk_score += 0.2
+    elif age >= 40:
+        risk_score += 0.1
+    
+    # Blood pressure risk
+    if bp >= 140:
+        risk_score += 0.2
+    elif bp >= 130:
+        risk_score += 0.1
+    
+    # Albumin risk (higher = worse)
+    risk_score += min(0.3, al * 0.06)
+    
+    # Sugar risk (higher = worse)
+    risk_score += min(0.2, su * 0.04)
+    
+    # Red blood cells (abnormal = worse)
+    if rbc == 1:  # Abnormal
+        risk_score += 0.1
+    
+    # Pus cells (abnormal = worse)
+    if pc == 1:  # Abnormal
+        risk_score += 0.1
+    
+    # Pus cell clumps (present = worse)
+    if pcc == 1:  # Present
+        risk_score += 0.1
+    
+    # Bacteria (present = worse)
+    if ba == 1:  # Present
+        risk_score += 0.1
+    
+    # Blood glucose (higher = worse)
+    if bgr > 200:
+        risk_score += 0.2
+    elif bgr > 140:
+        risk_score += 0.1
+    
+    # Blood urea (higher = worse)
+    if bu > 50:
+        risk_score += 0.3
+    elif bu > 40:
+        risk_score += 0.2
+    elif bu > 30:
+        risk_score += 0.1
+    
+    # Serum creatinine (higher = worse)
+    if sc > 1.5:
+        risk_score += 0.3
+    elif sc > 1.2:
+        risk_score += 0.2
+    elif sc > 0.9:
+        risk_score += 0.1
+    
+    # Normalize to 0-1 range
+    risk_score = min(1.0, risk_score / 2.0)
+    
+    # Add slight randomness to avoid deterministic results
+    risk_score = max(0.0, min(1.0, risk_score + random.uniform(-0.05, 0.05)))
+    
+    return risk_score
 
 @app.route('/kidney', methods=['GET', 'POST'])
 def kidney_disease():
-    # Check if kidney model is available
-    if kidney_model is None:
-        print("WARNING: Kidney disease model is not available. Using simulated predictions.")
-    
-    prediction = None
-    
-    # Check if heart risk score exists (user should complete heart assessment first)
-    if 'heart_risk' not in session and request.method == 'GET':
-        # If user tries to access kidney directly, redirect to heart
-        return redirect(url_for('heart_disease'))
-    
     if request.method == 'POST':
         try:
-            # Extract values from form
-            age = float(request.form.get('age', 0))
-            bp = float(request.form.get('bp', 0))
-            al = float(request.form.get('al', 0))
-            su = float(request.form.get('su', 0))
-            bgr = float(request.form.get('bgr', 0))
-            bu = float(request.form.get('bu', 0))
-            sc = float(request.form.get('sc', 0))
-            
-            # Print debug information
-            print(f"Kidney disease form data received:")
-            print(f"Age: {age}, BP: {bp}, AL: {al}, SU: {su}, BGR: {bgr}, BU: {bu}, SC: {sc}")
-            
-            if kidney_model is not None and len(kidney_features) > 0:
-                # Create a mapping from form fields to model features
-                form_to_feature = {
-                    'age': 'age',
-                    'bp': 'bp',
-                    'al': 'al',
-                    'su': 'su',
-                    'bgr': 'bgr',
-                    'bu': 'bu',
-                    'sc': 'sc',
-                    'pot': 'pot',
-                    'wc': 'wc',
-                    'htn': 'htn',
-                    'dm': 'dm',
-                    'cad': 'cad',
-                    'pe': 'pe',
-                    'ane': 'ane'
-                }
+            # Get form data with error handling
+            try:
+                age = float(request.form['age'])
+            except (KeyError, ValueError):
+                age = 50.0  # Default value
                 
-                # Extract values using the mapping
-                input_data = {}
-                for form_field, feature_name in form_to_feature.items():
-                    if feature_name in kidney_features:
-                        try:
-                            input_data[feature_name] = float(request.form.get(form_field, 0))
-                        except:
-                            input_data[feature_name] = 0
+            try:
+                bp = float(request.form['bp'])
+            except (KeyError, ValueError):
+                bp = 120.0  # Default value
                 
-                # Create features array in the correct order
-                features = []
-                for feature in kidney_features:
-                    if feature in input_data:
-                        features.append(input_data[feature])
-                    else:
-                        features.append(0)  # Default value for missing features
+            try:
+                sg = float(request.form['sg'])
+            except (KeyError, ValueError):
+                sg = 1.015  # Default value
                 
-                features_array = np.array(features).reshape(1, -1)
+            try:
+                al = float(request.form['al'])
+            except (KeyError, ValueError):
+                al = 0.0  # Default value
                 
-                # Make prediction with the model
-                prediction_result = kidney_model.predict_proba(features_array)
-                prediction = float(prediction_result[0][1])  # Probability of class 1 (CKD)
+            try:
+                su = float(request.form['su'])
+            except (KeyError, ValueError):
+                su = 0.0  # Default value
                 
-                print(f"Used kidney model for prediction: {prediction}")
+            try:
+                rbc = float(request.form['rbc'])
+            except (KeyError, ValueError):
+                rbc = 0.0  # Default value
+                
+            try:
+                pc = float(request.form['pc'])
+            except (KeyError, ValueError):
+                pc = 0.0  # Default value
+                
+            try:
+                pcc = float(request.form['pcc'])
+            except (KeyError, ValueError):
+                pcc = 0.0  # Default value
+                
+            try:
+                ba = float(request.form['ba'])
+            except (KeyError, ValueError):
+                ba = 0.0  # Default value
+                
+            try:
+                bgr = float(request.form['bgr'])
+            except (KeyError, ValueError):
+                bgr = 120.0  # Default value
+                
+            try:
+                bu = float(request.form['bu'])
+            except (KeyError, ValueError):
+                bu = 30.0  # Default value
+                
+            try:
+                sc = float(request.form['sc'])
+            except (KeyError, ValueError):
+                sc = 1.0  # Default value
+                
+            # Calculate risk score
+            if kidney_model is not None:
+                # Create feature array for prediction
+                features = [age, bp, al, su, rbc, pc, pcc, ba, bgr, bu, sc]
+                # Make prediction
+                try:
+                    risk_score = float(kidney_model.predict_proba([[features]])[0][1])
+                except Exception as e:
+                    print(f"Error making kidney disease prediction: {e}")
+                    risk_score = calculate_rule_based_kidney_risk([age, bp, sg, al, su, rbc, pc, pcc, ba, bgr, bu, sc])
             else:
-                # Simple heuristic for demo when model isn't available
-                # Higher risk factors: high age, high BP, high albumin, high sugar, high creatinine
-                risk_score = 0
-                if age > 60:
-                    risk_score += 0.2
-                if bp > 140:
-                    risk_score += 0.15
-                if al > 1:
-                    risk_score += 0.15
-                if su > 1:
-                    risk_score += 0.1
-                if bgr > 200:
-                    risk_score += 0.1
-                if bu > 100:
-                    risk_score += 0.15
-                if sc > 1.5:
-                    risk_score += 0.15
+                # Use rule-based risk calculation as fallback
+                risk_score = calculate_rule_based_kidney_risk([age, bp, sg, al, su, rbc, pc, pcc, ba, bgr, bu, sc])
                 
-                # Normalize and make it a bit random
-                import random
-                prediction = min(1.0, max(0.0, risk_score + random.uniform(-0.1, 0.1)))
-                print(f"Used heuristic for prediction: {prediction}")
-            
-            # Store kidney risk score in session
-            session['kidney_risk'] = prediction
-            print(f"Kidney risk score saved: {prediction}")
+            # Store risk score in session
+            session['kidney_risk'] = risk_score
+            print(f"Kidney disease risk score: {risk_score}")
             
             # Redirect to diabetes assessment
             return redirect(url_for('diabetes_disease'))
-            
         except Exception as e:
-            print(f"Error making kidney disease prediction: {e}")
-            # Default to a mid-range prediction
-            prediction = 0.5
+            print(f"Error in kidney disease risk calculation: {e}")
+            # If there's an error, use a default risk score
+            session['kidney_risk'] = 0.5
+            return redirect(url_for('diabetes_disease'))
     
-    # Pass heart risk from session (if it exists)
-    heart_risk = session.get('heart_risk', None)
+    # Content for the kidney disease template
+    content = """
+    <section class="py-12">
+        <div class="text-center mb-8">
+            <h1 class="gradient-text">Kidney Disease Risk Assessment</h1>
+            <p class="text-muted mt-4 max-w-2xl mx-auto">
+                Enter your health information below to receive a personalized kidney disease risk assessment.
+            </p>
+        </div>
+        <div class="card max-w-3xl mx-auto">
+            <form method="POST" action="/kidney">
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="age">Age</label>
+                            <input type="number" id="age" name="age" min="18" max="120" required>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="bp">Blood Pressure (mm Hg)</label>
+                            <input type="number" id="bp" name="bp" min="70" max="250" required>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="sg">Specific Gravity</label>
+                            <select id="sg" name="sg" required>
+                                <option value="1.005">1.005</option>
+                                <option value="1.010">1.010</option>
+                                <option value="1.015">1.015</option>
+                                <option value="1.020">1.020</option>
+                                <option value="1.025">1.025</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="al">Albumin</label>
+                            <select id="al" name="al" required>
+                                <option value="0">0</option>
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                                <option value="5">5</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="su">Sugar</label>
+                            <select id="su" name="su" required>
+                                <option value="0">0</option>
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                                <option value="5">5</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="rbc">Red Blood Cells</label>
+                            <select id="rbc" name="rbc" required>
+                                <option value="0">Normal</option>
+                                <option value="1">Abnormal</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="pc">Pus Cell</label>
+                            <select id="pc" name="pc" required>
+                                <option value="0">Normal</option>
+                                <option value="1">Abnormal</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="pcc">Pus Cell Clumps</label>
+                            <select id="pcc" name="pcc" required>
+                                <option value="0">Not Present</option>
+                                <option value="1">Present</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="ba">Bacteria</label>
+                            <select id="ba" name="ba" required>
+                                <option value="0">Not Present</option>
+                                <option value="1">Present</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="bgr">Blood Glucose Random (mg/dL)</label>
+                            <input type="number" id="bgr" name="bgr" min="70" max="500" required>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="bu">Blood Urea (mg/dL)</label>
+                            <input type="number" id="bu" name="bu" min="10" max="200" required>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="sc">Serum Creatinine (mg/dL)</label>
+                            <input type="number" id="sc" name="sc" step="0.1" min="0.5" max="10" required>
+                        </div>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn btn-primary w-full mt-8">
+                    Calculate Kidney Disease Risk
+                </button>
+            </form>
+        </div>
+    </section>
+    """
     
-    return render_template_string(KIDNEY_TEMPLATE, active_tab="kidney", prediction=prediction, next_assessment="diabetes", heart_risk=heart_risk)
+    return render_template_string(BASE_TEMPLATE, content=content, active_tab='kidney')
 
-# Add route for diabetes disease prediction
+# Function to calculate diabetes risk based on rules (fallback mechanism)
+def calculate_rule_based_diabetes_risk(features):
+    """
+    Calculate a risk score for diabetes based on clinical factors
+    
+    Parameters:
+    - features: list containing [age, gender, polyuria, polydipsia, sudden_weight_loss, weakness, 
+                               polyphagia, genital_thrush, visual_blurring, itching, irritability, 
+                               delayed_healing]
+    
+    Returns:
+    - float: risk score between 0-1
+    """
+    age, gender, polyuria, polydipsia, sudden_weight_loss, weakness, polyphagia, genital_thrush, visual_blurring, itching, irritability, delayed_healing = features
+    
+    # Start with a base risk score
+    risk_score = 0.0
+    
+    # Age risk (older = higher risk)
+    if age >= 60:
+        risk_score += 0.2
+    elif age >= 40:
+        risk_score += 0.1
+    elif age >= 30:
+        risk_score += 0.05
+    
+    # Gender (males slightly higher risk after age 50)
+    if gender == 1 and age >= 50:
+        risk_score += 0.05
+    
+    # Major symptoms have higher weights
+    if polyuria == 1:  # Excessive urination
+        risk_score += 0.15
+    
+    if polydipsia == 1:  # Excessive thirst
+        risk_score += 0.15
+    
+    if sudden_weight_loss == 1:
+        risk_score += 0.15
+    
+    if weakness == 1:
+        risk_score += 0.1
+    
+    if polyphagia == 1:  # Excessive hunger
+        risk_score += 0.15
+    
+    # Secondary symptoms
+    if genital_thrush == 1:
+        risk_score += 0.1
+    
+    if visual_blurring == 1:
+        risk_score += 0.1
+    
+    if itching == 1:
+        risk_score += 0.05
+    
+    if irritability == 1:
+        risk_score += 0.05
+    
+    if delayed_healing == 1:
+        risk_score += 0.1
+    
+    # Normalize to 0-1 range
+    risk_score = min(1.0, risk_score / 1.6)
+    
+    # Add slight randomness to avoid deterministic results
+    risk_score = max(0.0, min(1.0, risk_score + random.uniform(-0.05, 0.05)))
+    
+    return risk_score
+
 @app.route('/diabetes', methods=['GET', 'POST'])
 def diabetes_disease():
-    prediction = None
-    
-    # Check if kidney risk score exists (user should complete kidney assessment first)
-    if 'kidney_risk' not in session and request.method == 'GET':
-        # If user tries to access diabetes directly, redirect to heart
-        return redirect(url_for('heart_disease'))
-    
     if request.method == 'POST':
         try:
-            # Extract values from form
-            highbp = float(request.form.get('highbp', 0))
-            highchol = float(request.form.get('highchol', 0))
-            cholcheck = float(request.form.get('cholcheck', 0))
-            bmi = float(request.form.get('bmi', 0))
-            smoker = float(request.form.get('smoker', 0))
-            stroke = float(request.form.get('stroke', 0))
-            heartdisease = float(request.form.get('heartdisease', 0))
-            physactivity = float(request.form.get('physactivity', 0))
-            fruits = float(request.form.get('fruits', 0))
-            veggies = float(request.form.get('veggies', 0))
-            alcohol = float(request.form.get('alcohol', 0))
-            healthcare = float(request.form.get('healthcare', 0))
-            nodoc = float(request.form.get('nodoc', 0))
-            genhlth = float(request.form.get('genhlth', 0))
-            menthlth = float(request.form.get('menthlth', 0))
-            physhlth = float(request.form.get('physhlth', 0))
-            diffwalk = float(request.form.get('diffwalk', 0))
-            sex = float(request.form.get('sex', 0))
-            age = float(request.form.get('age', 0))
-            
-            # Print debug information
-            print(f"Diabetes form data received:")
-            print(f"HighBP: {highbp}, HighChol: {highchol}, BMI: {bmi}, Smoker: {smoker}")
-            
-            if diabetes_model is not None:
-                # Create a dictionary of features
-                input_data = {
-                    'HighBP': highbp,
-                    'HighChol': highchol,
-                    'CholCheck': cholcheck,
-                    'BMI': bmi,
-                    'Smoker': smoker,
-                    'Stroke': stroke,
-                    'HeartDiseaseorAttack': heartdisease,
-                    'PhysActivity': physactivity,
-                    'Fruits': fruits,
-                    'Veggies': veggies,
-                    'HvyAlcoholConsump': alcohol,
-                    'AnyHealthcare': healthcare,
-                    'NoDocbcCost': nodoc,
-                    'GenHlth': genhlth,
-                    'MentHlth': menthlth,
-                    'PhysHlth': physhlth,
-                    'DiffWalk': diffwalk,
-                    'Sex': sex,
-                    'Age': age
-                }
+            # Get form data with error handling
+            try:
+                age = float(request.form['age'])
+            except (KeyError, ValueError):
+                age = 40.0  # Default value
                 
-                # Create features array
-                features = []
-                for feature in diabetes_features:
-                    if feature in input_data:
-                        features.append(input_data[feature])
-                    else:
-                        features.append(0)
+            try:
+                gender = float(request.form['gender'])
+            except (KeyError, ValueError):
+                gender = 0.0  # Default female
                 
-                features_array = np.array(features).reshape(1, -1)
+            try:
+                polyuria = float(request.form['polyuria'])
+            except (KeyError, ValueError):
+                polyuria = 0.0  # Default no
                 
-                # Make prediction with the model
-                # prediction_result = diabetes_model.predict_proba(features_array)
-                # prediction = float(prediction_result[0][1])
+            try:
+                polydipsia = float(request.form['polydipsia'])
+            except (KeyError, ValueError):
+                polydipsia = 0.0  # Default no
                 
-                # Since we don't have the actual model, use a weighted risk score
-                prediction = 0.5  # Would be replaced with actual model prediction
-                print(f"Used diabetes model for prediction: {prediction}")
-            else:
-                # Simple heuristic for demo when model isn't available
-                risk_score = 0
-                if highbp > 0:
-                    risk_score += 0.15
-                if highchol > 0:
-                    risk_score += 0.15
-                if bmi >= 30:
-                    risk_score += 0.15
-                if smoker > 0:
-                    risk_score += 0.10
-                if stroke > 0:
-                    risk_score += 0.20
-                if heartdisease > 0:
-                    risk_score += 0.20
-                if physactivity == 0:
-                    risk_score += 0.05
-                if fruits == 0:
-                    risk_score += 0.03
-                if veggies == 0:
-                    risk_score += 0.03
-                if genhlth > 3:
-                    risk_score += 0.10
-                if age > 7:  # Age categories in BRFSS, higher = older
-                    risk_score += 0.15
+            try:
+                sudden_weight_loss = float(request.form['sudden_weight_loss'])
+            except (KeyError, ValueError):
+                sudden_weight_loss = 0.0  # Default no
                 
-                # Normalize and add some randomness
-                prediction = min(1.0, max(0.0, risk_score + random.uniform(-0.05, 0.05)))
-                print(f"Used heuristic for diabetes prediction: {prediction}")
+            try:
+                weakness = float(request.form['weakness'])
+            except (KeyError, ValueError):
+                weakness = 0.0  # Default no
+                
+            try:
+                polyphagia = float(request.form['polyphagia'])
+            except (KeyError, ValueError):
+                polyphagia = 0.0  # Default no
+                
+            try:
+                genital_thrush = float(request.form['genital_thrush'])
+            except (KeyError, ValueError):
+                genital_thrush = 0.0  # Default no
+                
+            try:
+                visual_blurring = float(request.form['visual_blurring'])
+            except (KeyError, ValueError):
+                visual_blurring = 0.0  # Default no
+                
+            try:
+                itching = float(request.form['itching'])
+            except (KeyError, ValueError):
+                itching = 0.0  # Default no
+                
+            try:
+                irritability = float(request.form['irritability'])
+            except (KeyError, ValueError):
+                irritability = 0.0  # Default no
+                
+            try:
+                delayed_healing = float(request.form['delayed_healing'])
+            except (KeyError, ValueError):
+                delayed_healing = 0.0  # Default no
             
-            # Store diabetes risk score and calculate combined score
-            session['diabetes_risk'] = prediction
+            # Use rule-based risk calculation as we don't have a diabetes model loaded
+            features = [age, gender, polyuria, polydipsia, sudden_weight_loss, weakness, 
+                       polyphagia, genital_thrush, visual_blurring, itching, irritability, 
+                       delayed_healing]
             
-            # Calculate combined risk score using weighted mean based on model accuracies
-            heart_risk = session.get('heart_risk', 0.5)
-            kidney_risk = session.get('kidney_risk', 0.5)
+            risk_score = calculate_rule_based_diabetes_risk(features)
+                
+            # Store risk score in session
+            session['diabetes_risk'] = risk_score
+            print(f"Diabetes risk score: {risk_score}")
             
-            # Check if heart or kidney risk is extremely high (>90%), but NOT diabetes
-            has_extremely_high_risk = (heart_risk > 0.9 or kidney_risk > 0.9)
-            
-            # Calculate weighted mean based on weights
-            total_weight = heart_weight + kidney_weight + diabetes_weight
-            combined_risk = (
-                (heart_risk * heart_weight) + 
-                (kidney_risk * kidney_weight) + 
-                (prediction * diabetes_weight)
-            ) / total_weight
-            
-            # Force combined risk to be high if heart or kidney risk is extremely high
-            if has_extremely_high_risk and combined_risk < 0.9:
-                combined_risk = max(combined_risk, 0.9)  # Ensure minimum 90% risk
-                print("Applying high risk override due to heart or kidney disease risk exceeding 90%")
-            
-            session['combined_risk'] = combined_risk
-            
-            print(f"Diabetes risk score saved: {prediction}")
-            print(f"Combined risk score (weighted): {combined_risk}")
-            
-            # Redirect to combined results page
+            # Redirect to results page
             return redirect(url_for('combined_results'))
-            
         except Exception as e:
-            print(f"Error making diabetes prediction: {e}")
-            prediction = 0.5
+            print(f"Error in diabetes risk calculation: {e}")
+            # If there's an error, use a default risk score
+            session['diabetes_risk'] = 0.5
+            return redirect(url_for('combined_results'))
     
-    # Pass heart and kidney risks from session
-    heart_risk = session.get('heart_risk', None)
-    kidney_risk = session.get('kidney_risk', None)
+    # Content for the diabetes disease template
+    content = """
+    <section class="py-12">
+        <div class="text-center mb-8">
+            <h1 class="gradient-text">Diabetes Risk Assessment</h1>
+            <p class="text-muted mt-4 max-w-2xl mx-auto">
+                Enter your health information below to receive a personalized diabetes risk assessment.
+            </p>
+        </div>
+        <div class="card max-w-3xl mx-auto">
+            <form method="POST" action="/diabetes">
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="age">Age</label>
+                            <input type="number" id="age" name="age" min="18" max="120" required>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="gender">Gender</label>
+                            <select id="gender" name="gender" required>
+                                <option value="0">Female</option>
+                                <option value="1">Male</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="polyuria">Polyuria (Excessive Urination)</label>
+                            <select id="polyuria" name="polyuria" required>
+                                <option value="0">No</option>
+                                <option value="1">Yes</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="polydipsia">Polydipsia (Excessive Thirst)</label>
+                            <select id="polydipsia" name="polydipsia" required>
+                                <option value="0">No</option>
+                                <option value="1">Yes</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="sudden_weight_loss">Sudden Weight Loss</label>
+                            <select id="sudden_weight_loss" name="sudden_weight_loss" required>
+                                <option value="0">No</option>
+                                <option value="1">Yes</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="weakness">Weakness</label>
+                            <select id="weakness" name="weakness" required>
+                                <option value="0">No</option>
+                                <option value="1">Yes</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="polyphagia">Polyphagia (Excessive Hunger)</label>
+                            <select id="polyphagia" name="polyphagia" required>
+                                <option value="0">No</option>
+                                <option value="1">Yes</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="genital_thrush">Genital Thrush</label>
+                            <select id="genital_thrush" name="genital_thrush" required>
+                                <option value="0">No</option>
+                                <option value="1">Yes</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="visual_blurring">Visual Blurring</label>
+                            <select id="visual_blurring" name="visual_blurring" required>
+                                <option value="0">No</option>
+                                <option value="1">Yes</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="itching">Itching</label>
+                            <select id="itching" name="itching" required>
+                                <option value="0">No</option>
+                                <option value="1">Yes</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="irritability">Irritability</label>
+                            <select id="irritability" name="irritability" required>
+                                <option value="0">No</option>
+                                <option value="1">Yes</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="delayed_healing">Delayed Healing</label>
+                            <select id="delayed_healing" name="delayed_healing" required>
+                                <option value="0">No</option>
+                                <option value="1">Yes</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn btn-primary w-full mt-8">
+                    Calculate Diabetes Risk
+                </button>
+            </form>
+        </div>
+    </section>
+    """
     
-    return render_template_string(DIABETES_TEMPLATE, active_tab="diabetes", prediction=prediction, next_assessment="results", heart_risk=heart_risk, kidney_risk=kidney_risk)
+    return render_template_string(BASE_TEMPLATE, content=content, active_tab='diabetes')
 
 # Add route for combined results
 @app.route('/results', methods=['GET'])
@@ -3433,16 +3394,17 @@ def combined_results():
 def calculate_insurance_premium(risk_score):
     """
     Calculate insurance premium based on the risk score percentage:
-    1-10%: ₹2,000-₹3,000
-    11-20%: ₹3,000-₹5,000
-    21-30%: ₹5,000-₹8,000
-    31-40%: ₹8,000-₹12,000
-    41-50%: ₹12,000-₹17,000
-    51-60%: ₹17,000-₹22,000
-    61-70%: ₹22,000-₹28,000
-    71-80%: ₹28,000-₹35,000
-    81-90%: ₹35,000-₹43,000
-    91-100%: ₹43,000-₹53,000
+    
+    1-10%: INR 2,000-3,000
+    11-20%: INR 3,000-5,000
+    21-30%: INR 5,000-8,000
+    31-40%: INR 8,000-12,000
+    41-50%: INR 12,000-17,000
+    51-60%: INR 17,000-22,000
+    61-70%: INR 22,000-28,000
+    71-80%: INR 28,000-35,000
+    81-90%: INR 35,000-43,000
+    91-100%: INR 43,000-53,000
     
     Returns a tuple of (risk_tier, min_premium, max_premium)
     """

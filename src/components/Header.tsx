@@ -100,30 +100,30 @@ export function Header() {
   return (
     <header 
       className={cn(
-        "sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-all duration-300",
-        scrolled ? "shadow-md h-14" : "h-16"
+        "sticky top-0 z-50 w-full border-b border-gray-800 bg-black/95 backdrop-blur supports-[backdrop-filter]:bg-black/80 transition-all duration-300",
+        scrolled ? "shadow-lg shadow-red-900/10 h-14" : "h-16"
       )}
     >
       <div className={cn(
         "container flex items-center h-full transition-all duration-300",
         scrolled ? "py-1" : "py-2"
       )}>
-        <Link to="/" className="flex items-center gap-2 font-bold text-2xl text-primary mr-4 group">
+        <Link to="/" className="flex items-center gap-2 font-bold text-2xl text-red-500 mr-4 group">
           <div className="relative">
             <Heart className={cn(
-              "fill-blue-500 text-blue-500 transition-all duration-300 group-hover:scale-110",
+              "fill-red-500 text-red-500 transition-all duration-300 group-hover:scale-110 group-hover:fill-red-400",
               scrolled ? "h-5 w-5" : "h-6 w-6"
             )} />
-            <span className="absolute -top-1 -right-1 w-2 h-2 bg-blue-500 rounded-full animate-ping opacity-75"></span>
+            <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-ping opacity-75"></span>
           </div>
           <div className="overflow-hidden whitespace-nowrap">
             <span className={cn(
-              "transition-all duration-300 text-blue-600 font-bold relative inline-block min-w-24",
+              "transition-all duration-300 red-text-gradient font-bold relative inline-block min-w-24",
               scrolled ? "text-xl" : "text-2xl"
             )}>
               {titleText || "C"}
               {titleText.length < fullTitle.length && (
-                <span className="absolute right-0 top-0 h-full w-1 bg-blue-600 animate-cursor"></span>
+                <span className="absolute right-0 top-0 h-full w-1 bg-red-500 animate-cursor"></span>
               )}
             </span>
           </div>
@@ -134,7 +134,7 @@ export function Header() {
             <NavigationMenuItem>
               <Link to="/">
                 <NavigationMenuLink className={cn(
-                  "group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50"
+                  "group inline-flex h-10 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium transition-colors hover:text-red-400 text-gray-200 focus:text-red-400 focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:text-red-500 data-[state=open]:text-red-400"
                 )}>
                   Home
                 </NavigationMenuLink>
@@ -143,7 +143,7 @@ export function Header() {
             <NavigationMenuItem>
               <a href="#services" onClick={scrollToSection('services')}>
                 <NavigationMenuLink className={cn(
-                  "group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50"
+                  "group inline-flex h-10 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium transition-colors hover:text-red-400 text-gray-200 focus:text-red-400 focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:text-red-500 data-[state=open]:text-red-400"
                 )}>
                   Services
                 </NavigationMenuLink>
@@ -152,7 +152,7 @@ export function Header() {
             <NavigationMenuItem>
               <Link to="/about">
                 <NavigationMenuLink className={cn(
-                  "group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50"
+                  "group inline-flex h-10 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium transition-colors hover:text-red-400 text-gray-200 focus:text-red-400 focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:text-red-500 data-[state=open]:text-red-400"
                 )}>
                   About Us
                 </NavigationMenuLink>
@@ -162,7 +162,7 @@ export function Header() {
         </NavigationMenu>
         <div className="ml-4">
           <Link to="/login">
-            <Button size="sm" className="ml-auto flex items-center gap-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
+            <Button size="sm" className="ml-auto flex items-center gap-1 bg-gradient-to-r from-red-600 to-red-800 hover:from-red-700 hover:to-red-900 text-white">
               Login/Signup
             </Button>
           </Link>
@@ -201,8 +201,8 @@ const services = [
   {
     title: "Insurance Premium Calculator",
     href: "/services/insurance",
-    description: "Calculate potential insurance savings based on your health profile."
-  },
+    description: "Estimate personalized insurance premiums based on your comprehensive health profile."
+  }
 ];
 
 const ListItem = React.forwardRef<

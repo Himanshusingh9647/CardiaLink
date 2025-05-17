@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -46,9 +45,9 @@ const Login = () => {
       title="Welcome back"
       description="Enter your credentials to access your account"
       footer={
-        <div className="mt-4 text-center text-sm">
+        <div className="mt-4 text-center text-sm text-gray-400">
           Don't have an account?{" "}
-          <Link to="/signup" className="underline text-primary hover:text-primary/80">
+          <Link to="/signup" className="underline text-red-500 hover:text-red-400 transition-colors">
             Sign up
           </Link>
         </div>
@@ -57,7 +56,7 @@ const Login = () => {
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email" className="text-gray-300">Email</Label>
             <Input
               id="email"
               type="email"
@@ -66,12 +65,13 @@ const Login = () => {
               onChange={(e) => setEmail(e.target.value)}
               required
               autoComplete="email"
+              className="bg-gray-800/70 border-gray-700 text-white placeholder:text-gray-500 focus:border-red-500 focus:ring-red-500/20"
             />
           </div>
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label htmlFor="password">Password</Label>
-              <Link to="/forgot-password" className="text-xs text-primary hover:underline">
+              <Label htmlFor="password" className="text-gray-300">Password</Label>
+              <Link to="/forgot-password" className="text-xs text-red-500 hover:text-red-400 transition-colors">
                 Forgot password?
               </Link>
             </div>
@@ -83,16 +83,21 @@ const Login = () => {
               onChange={(e) => setPassword(e.target.value)}
               required
               autoComplete="current-password"
+              className="bg-gray-800/70 border-gray-700 text-white placeholder:text-gray-500 focus:border-red-500 focus:ring-red-500/20"
             />
           </div>
           <div className="flex items-center space-x-2">
-            <Checkbox id="remember" />
-            <Label htmlFor="remember" className="text-sm font-medium leading-none">
+            <Checkbox id="remember" className="border-gray-700 data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600" />
+            <Label htmlFor="remember" className="text-sm font-medium leading-none text-gray-300">
               Remember me
             </Label>
           </div>
         </div>
-        <Button type="submit" className="w-full" disabled={isLoading}>
+        <Button 
+          type="submit" 
+          className="w-full bg-gradient-to-r from-red-600 to-red-800 hover:from-red-700 hover:to-red-900 text-white transition-all duration-300" 
+          disabled={isLoading}
+        >
           {isLoading ? "Logging in..." : "Log in"}
         </Button>
       </form>

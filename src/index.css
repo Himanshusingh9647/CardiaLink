@@ -88,14 +88,102 @@
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
+
+  /* Black and Red Theme */
+  .black-red {
+    --background: 0 0% 0%;
+    --foreground: 0 0% 98%;
+
+    --card: 0 0% 5%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 0 0% 10%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 0 84% 50%;
+    --primary-foreground: 0 0% 98%;
+
+    --secondary: 0 0% 15%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 0 0% 20%;
+    --muted-foreground: 0 0% 70%;
+
+    --accent: 0 84% 40%;
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 0 0% 20%;
+    --input: 0 0% 15%;
+    --ring: 0 84% 50%;
+
+    --sidebar-background: 0 0% 5%;
+    --sidebar-foreground: 0 0% 90%;
+    --sidebar-primary: 0 84% 45%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 15%;
+    --sidebar-accent-foreground: 0 0% 90%;
+    --sidebar-border: 0 0% 20%;
+    --sidebar-ring: 0 84% 50%;
+  }
 }
 
 @layer base {
   * {
     @apply border-border;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
   }
 
-  body {
+  html, body {
     @apply bg-background text-foreground;
+    width: 100%;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* These styles won't apply to the main page container */
+  #root:not(:has(.main-page-container)) {
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+@layer components {
+  .red-btn {
+    @apply bg-[#FF0000] hover:bg-[#CC0000] text-white font-bold py-2 px-4 rounded transition-all duration-300;
+  }
+  
+  .black-gradient {
+    background: linear-gradient(to bottom, #000000, #1a1a1a);
+  }
+  
+  .red-accent {
+    color: #FF0000;
+  }
+
+  .black-red-card {
+    @apply bg-[#0a0a0a] text-white border border-[#222] rounded-lg p-6 shadow-lg hover:shadow-[#FF0000]/20 transition-all duration-300;
+  }
+
+  .red-border {
+    @apply border-[#FF0000];
+  }
+
+  .red-glow {
+    @apply shadow-[#FF0000]/20;
+  }
+
+  .red-text-gradient {
+    @apply text-transparent bg-clip-text bg-gradient-to-r from-[#FF0000] to-[#FF6666];
+  }
+
+  .page-container {
+    @apply w-full min-h-screen bg-black flex flex-col overflow-hidden;
   }
 }

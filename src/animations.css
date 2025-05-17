@@ -1,0 +1,114 @@
+/* Pulsating animations */
+@keyframes pulse-glow {
+  0%, 100% {
+    filter: drop-shadow(0 0 5px rgba(239, 68, 68, 0.5));
+  }
+  50% {
+    filter: drop-shadow(0 0 20px rgba(239, 68, 68, 0.8));
+  }
+}
+
+.pulse-glow {
+  animation: pulse-glow 3s ease-in-out infinite;
+}
+
+/* Parallax scroll effect */
+.parallax-scroll {
+  transition: transform 0.2s ease-out;
+  will-change: transform;
+}
+
+/* Floating animation */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+.floating {
+  animation: float 6s ease-in-out infinite;
+}
+
+/* Heart beat animation */
+@keyframes heartbeat {
+  0%, 100% {
+    transform: scale(1);
+  }
+  25% {
+    transform: scale(1.2);
+  }
+  40% {
+    transform: scale(0.9);
+  }
+  60% {
+    transform: scale(1.2);
+  }
+}
+
+.animate-heartbeat {
+  animation: heartbeat 1s ease-in-out;
+}
+
+/* Gradient text animation */
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animated-gradient-text {
+  background: linear-gradient(90deg, #ef4444, #b91c1c, #ef4444);
+  background-size: 200% auto;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  animation: gradient-shift 3s ease infinite;
+}
+
+/* Slow reveal on scroll */
+.reveal-on-scroll {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.8s ease-out, transform 1s ease-out;
+}
+
+.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Reveal text line by line */
+@keyframes reveal-line {
+  0% {
+    transform: translateY(1em);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.line-reveal {
+  overflow: hidden;
+}
+
+.line-reveal span {
+  display: block;
+  animation: reveal-line 0.8s forwards;
+  opacity: 0;
+}
+
+.line-reveal span:nth-child(1) { animation-delay: 0.1s; }
+.line-reveal span:nth-child(2) { animation-delay: 0.3s; }
+.line-reveal span:nth-child(3) { animation-delay: 0.5s; }
+.line-reveal span:nth-child(4) { animation-delay: 0.7s; } 

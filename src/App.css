@@ -1,7 +1,9 @@
+@import './animations.css';
+
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
   text-align: center;
 }
 
@@ -39,4 +41,221 @@
 
 .read-the-docs {
   color: #888;
+}
+
+/* App-specific styles */
+:root {
+  --primary: #ff0000;
+  --primary-dark: #b30000;
+  --primary-light: #ff3333;
+  --background: #000000;
+  --card-bg: #111111;
+  --text-primary: #ffffff;
+  --text-secondary: #cccccc;
+  --text-muted: #666666;
+  --border-color: #333333;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--text-primary);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+/* Animations */
+@keyframes pulse {
+  0% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.6;
+  }
+}
+
+@keyframes heartbeat {
+  0% {
+    transform: scale(1);
+  }
+  25% {
+    transform: scale(1.2);
+  }
+  50% {
+    transform: scale(1);
+  }
+  75% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.animate-heartbeat {
+  animation: heartbeat 1s infinite;
+}
+
+.animate-pulse {
+  animation: pulse 2s infinite;
+}
+
+/* Background utilities */
+.bg-grid-white\/\[0\.05\] {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' width='32' height='32' fill='none' stroke='rgb(255 255 255 / 0.05)'%3e%3cpath d='M0 .5H31.5V32'/%3e%3c/svg%3e");
+}
+
+.black-gradient {
+  background: linear-gradient(to bottom, #000000, #111111);
+}
+
+/* Red gradient text */
+.red-text-gradient {
+  background: linear-gradient(to right, #ff0000, #ff3333);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #111111;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #333333;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-dark);
+}
+
+/* Card hover effects */
+.card-hover {
+  transition: all 0.3s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(255, 0, 0, 0.15);
+}
+
+/* Custom focus styles */
+*:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Button styles */
+button, .button {
+  transition: all 0.2s ease;
+}
+
+/* Red glow effects */
+.glow-red {
+  box-shadow: 0 0 15px 5px rgba(255, 0, 0, 0.15);
+}
+
+.glow-red-sm {
+  box-shadow: 0 0 10px 2px rgba(255, 0, 0, 0.1);
+}
+
+/* Helper utilities */
+.text-shadow {
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.border-red {
+  border: 1px solid var(--primary);
+}
+
+/* Loading overlay styles */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.95);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.loading-overlay.visible {
+  opacity: 1;
+}
+
+.medical-logo {
+  width: 80px;
+  height: 80px;
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.medical-logo svg {
+  width: 100%;
+  height: 100%;
+  fill: #dc2626;
+  animation: pulse-heart 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-heart {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.2); opacity: 0.8; }
+}
+
+.loading-text {
+  font-size: 1.5rem;
+  font-weight: 500;
+  margin-bottom: 30px;
+  color: white;
+  background: linear-gradient(to right, #dc2626, #ef4444);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.progress-container {
+  width: 300px;
+  height: 8px;
+  background-color: #333;
+  border-radius: 5px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.progress-bar {
+  height: 100%;
+  width: 0;
+  background: linear-gradient(to right, #dc2626, #ef4444);
+  border-radius: 5px;
+  transition: width 0.2s ease-out;
+}
+
+.progress-percentage {
+  font-size: 0.9rem;
+  color: #888;
+}
+
+.fade-out {
+  animation: fadeOut 0.5s forwards;
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
 }

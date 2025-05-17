@@ -1,38 +1,56 @@
-
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Activity, Database, Heart, LineChart, Laptop, Shield } from "lucide-react";
+import { motion } from "framer-motion";
 
 export function FeaturesSection() {
   return (
-    <section className="py-16 bg-slate-50 dark:bg-slate-900" id="features">
-      <div className="container px-4 md:px-6">
-        <div className="flex flex-col items-center justify-center space-y-4 text-center">
-          <div className="space-y-2">
-            <div className="inline-block rounded-lg bg-primary/10 px-3 py-1 text-sm text-primary">
+    <section className="py-16 bg-black features-section" id="features">
+      <div className="container px-4 md:px-6 relative">
+        {/* Red glow effects */}
+        <div className="absolute top-1/4 -left-20 w-72 h-72 bg-red-600 rounded-full filter blur-[120px] opacity-20"></div>
+        <div className="absolute bottom-1/4 -right-20 w-72 h-72 bg-red-600 rounded-full filter blur-[120px] opacity-20"></div>
+        
+        <div className="flex flex-col items-center justify-center space-y-4 text-center relative z-10">
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7 }}
+            className="space-y-2"
+          >
+            <div className="inline-block rounded-lg bg-red-900/30 px-3 py-1 text-sm text-red-500 border border-red-800/50">
               Features
             </div>
-            <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">
+            <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl bg-clip-text text-transparent bg-gradient-to-r from-red-500 to-red-700">
               Cutting-Edge Technology for Health Risk Assessment
             </h2>
-            <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+            <p className="max-w-[900px] text-gray-400 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
               Our advanced platform combines AI and healthcare expertise to deliver personalized health risk assessments.
             </p>
-          </div>
+          </motion.div>
         </div>
-        <div className="mx-auto grid max-w-5xl grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 mt-12">
-          {features.map((feature) => (
-            <Card key={feature.title} className="transition-all hover:shadow-lg">
-              <CardHeader className="space-y-1">
-                <feature.icon className="h-8 w-8 text-primary" />
-                <CardTitle className="text-xl">{feature.title}</CardTitle>
-                <CardDescription>{feature.description}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">{feature.content}</p>
-              </CardContent>
-            </Card>
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+          className="mx-auto grid max-w-5xl grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 mt-12"
+        >
+          {features.map((feature, index) => (
+            <motion.div 
+              key={feature.title} 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 * (index + 1) }}
+              whileHover={{ y: -5 }}
+              className="bg-gray-900/50 border border-gray-800 rounded-xl p-6 transition-all duration-300"
+            >
+              <div className="mb-4">
+                <feature.icon className="h-10 w-10 text-red-500" />
+              </div>
+              <h3 className="text-xl font-semibold text-white mb-2">{feature.title}</h3>
+              <p className="text-sm text-red-400 mb-3">{feature.description}</p>
+              <p className="text-sm text-gray-400">{feature.content}</p>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   );
