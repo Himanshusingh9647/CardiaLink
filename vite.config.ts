@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react-swc'
 import path from 'path'
 
 // GitHub Pages repo name - change this to your repo name
-const repoName = 'cardialink-quantify'
+const repoName = 'CardiaLink'
 
 export default defineConfig({
   plugins: [react()],
