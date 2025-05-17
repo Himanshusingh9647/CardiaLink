@@ -23,10 +23,18 @@ jobs:
           cache: 'npm'
       
       - name: Install dependencies
-        run: npm install
+        run: |
+          npm install
+          npx update-browserslist-db@latest
       
       - name: Build
-        run: npm run build
+        run: |
+          echo "Starting build process..."
+          npm run build
+          echo "Build completed. Checking dist directory contents:"
+          ls -la dist/
+          echo "Checking if index.html exists:"
+          cat dist/index.html
       
       - name: Setup Pages
         uses: actions/configure-pages@v4
