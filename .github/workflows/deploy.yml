@@ -9,14 +9,9 @@ permissions:
   pages: write
   id-token: write
 
-concurrency:
-  group: "pages"
-  cancel-in-progress: false
-
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -24,28 +19,14 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "18"
           cache: 'npm'
       
       - name: Install dependencies
-        run: |
-          npm cache clean --force
-          npm install --legacy-peer-deps
-          npm install -g npm@latest
-      
-      - name: Update browserslist database
-        run: npx update-browserslist-db@latest
+        run: npm install
       
       - name: Build
-        run: |
-          echo "Building the application..."
-          npm run build || (echo "Build failed" && exit 1)
-          echo "Build completed. Contents of dist directory:"
-          ls -la dist/
-          if [ ! -f "dist/index.html" ]; then
-            echo "Error: dist/index.html not found"
-            exit 1
-          fi
+        run: npm run build
       
       - name: Setup Pages
         uses: actions/configure-pages@v4
@@ -61,7 +42,6 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     needs: build
-    timeout-minutes: 5
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
